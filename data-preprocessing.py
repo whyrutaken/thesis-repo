@@ -66,7 +66,7 @@ id_dictionary = {
 df = pd.read_csv("data/TelemetryData.csv", names=["id", "timestamp", "value"], parse_dates=True)
 df = df.replace(id_dictionary)  # Replace json ids with dictionary values
 
-# %%
+
 # Make individual tables
 heat0 = df.loc[df["id"] == "Heat 0th floor (kWh)"]
 heat1 = df.loc[df["id"] == "Heat 1st floor (kWh)"]
@@ -111,7 +111,7 @@ del powerimport["id"]
 
 powerexport = powerexport.rename(columns={"value": "Power exported to Grid (Wh)"}).set_index("timestamp")
 del powerexport["id"]
-# %%
+
 # Export to csv
 heat0.to_csv("heat-ground-floor.csv")
 heat1.to_csv("heat-1st-floor.csv")
