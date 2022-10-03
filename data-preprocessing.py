@@ -112,19 +112,31 @@ del powerimport["id"]
 powerexport = powerexport.rename(columns={"value": "Power exported to Grid (Wh)"}).set_index("timestamp")
 del powerexport["id"]
 
+
+
+
 # Export to csv
-heat0.to_csv("heat-ground-floor.csv")
-heat1.to_csv("heat-1st-floor.csv")
-heat2.to_csv("heat-2nd-floor.csv")
-electricity.to_csv("electricity.csv")
-solar.to_csv("solar-produced.csv")
-powerimport.to_csv("power-imported-from-grid.csv")
-powerexport.to_csv("power-exported-to-grid.csv")
+
+def export_to_csv(table, filename):
+    table.to_csv(filename)
+
+export_to_csv(heat0, "heat-ground-floor.csv")
+export_to_csv(heat1, "heat-1st-floor.csv")
+export_to_csv(heat2, "heat-2nd-floor.csv")
+export_to_csv(electricity, "electricity.csv")
+export_to_csv(solar, "solar-produced.csv")
+export_to_csv(powerimport, "power-imported-from-grid.csv")
+export_to_csv(powerexport, "power-exported-to-grid.csv")
 
 # %%
 # "daily solar": daily max produced solar
-solar.index = pd.to_datetime(solar.index)
-daily_solar = solar.loc[solar.groupby(pd.Grouper(freq='D')).idxmax().iloc[:, 0]]
+
+def get_daily_max(table):
+    table.index = pd.to_datetime(table.index)
+    daily_max = table.loc[table.groupby(pd.Grouper(freq='D')).idxmax().iloc[:, 0]]
+    return daily_max
+
+daily_solar = get_daily_max(solar)
 # %%
 # add y/m/d columns to "daily_solar"
 from datetime import datetime
