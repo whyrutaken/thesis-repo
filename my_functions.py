@@ -2,23 +2,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-
-
-
-def get_new_resolution_by_argument(df: pd.DataFrame, resolution: str) -> pd.DataFrame:
-    resampled_df = df.resample(resolution).max()
-    return resampled_df.fillna(value=0)
-
-
-
-
-
-
-
-
-
-
-
 # deprecated
 def convert_total_to_daily_accumulation(df: pd.DataFrame) -> pd.DataFrame:
     # BUT modify read_csv() to make it work
@@ -28,26 +11,6 @@ def convert_total_to_daily_accumulation(df: pd.DataFrame) -> pd.DataFrame:
     new_df = new_df.iloc[::-1]
     new_df = new_df.diff(periods=1).fillna(new_df)
     return new_df
-
-
-def get_abs_value_from_daily_acc(df: pd.DataFrame, old_column: str, new_column: str) -> pd.DataFrame:
-    df[new_column] = df[old_column].diff().fillna(0)  # get the difference of elements from previous elements
-
-    # get date change locations where diff != 0 Days
-    # (in df2["add"], True: whenever the day changed, False: whenever is a value from the same day)
-    df["date"] = df.index.date
-    df["add"] = df["date"].diff().ne("0D")
-    # 3. add the previous total back
-    df.loc[df["add"], new_column] += df[old_column].shift()[df["add"]]
-    df = df.fillna(0)
-    del df["date"]
-    del df["add"]
-    return df
-
-
-def calculate_consumption(imported: float, exported: float, solar: float) -> float:
-    used = imported + solar
-    return used - exported
 
 
 def plot_solar_vs_consumption(df: pd.DataFrame, date: str):
