@@ -20,8 +20,6 @@ class Preprocessor:
     power_imported_id = "Power imported from Grid (Wh)"
     power_exported_id = "Power exported to Grid (Wh)"
 
-
-
     def extract_tables_and_set_index(self, df: pd.DataFrame, id_list: list) -> list:
         list_of_dfs = list()
         for id_ in id_list:
@@ -36,7 +34,6 @@ class Preprocessor:
 
     def get_new_resolution_by_argument(self, df: pd.DataFrame, resolution: str) -> pd.DataFrame:
         return df.resample(resolution).max().fillna(value=0)
-
 
     def set_df_valid_date(self, df: pd.DataFrame, date: str) -> pd.DataFrame:
         return df[:date]  # eliminate rows after 2022-03-01
@@ -66,10 +63,13 @@ class Preprocessor:
 
     def create_master_df(self):
         SDA = "solar_daily_acc"
-        SA = "solar_absolute"
         IDA = "imported_daily_acc"
         EDA = "exported_daily_acc"
         CDA = "consumption_daily_acc"
+
+        SA = "solar_absolute"
+        IA = "imported_absolute"
+        EA = "exported_absolute"
         CA = "consumption_absolute"
 
         master_df = self.df_solar_resampled.copy()
@@ -80,12 +80,12 @@ class Preprocessor:
             lambda row: self.calculate_consumption(row[IDA], row[EDA], row[SDA]), axis=1)
 
         master_df = self.get_abs_value_from_daily_acc(master_df, SDA, SA)
+        master_df = self.get_abs_value_from_daily_acc(master_df, IDA, IA)
+        master_df = self.get_abs_value_from_daily_acc(master_df, EDA, EA)
         master_df = self.get_abs_value_from_daily_acc(master_df, CDA, CA)
 
         master_df = self.del_lines(master_df, ["2020-01-01 00:00", "2020-03-29 02:00", "2021-03-28 02:00"])
         return master_df
-
-
 
     def __init__(self, valid_to: str):
         # telemetry data to separate tables
@@ -100,12 +100,8 @@ class Preprocessor:
         self.df_power_imported_resampled = self.get_new_resolution_by_argument(self.df_power_imported, 'H')
         self.df_power_exported_resampled = self.get_new_resolution_by_argument(self.df_power_exported, 'H')
 
-        # valid until date "2022-02-28"
-        self.set_df_valid_date(self.df_solar_resampled, valid_to)
-        self.set_df_valid_date(self.df_power_imported_resampled, valid_to)
-        self.set_df_valid_date(self.df_power_exported_resampled, valid_to)
-
         self.df = self.create_master_df()
+        self.df = self.set_df_valid_date(self.df, valid_to)
 
     def export_raw_data(self):
         self.df_solar.to_csv("solar-produced.csv")
