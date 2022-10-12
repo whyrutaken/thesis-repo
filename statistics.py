@@ -1,6 +1,6 @@
 #%%
 import pandas as pd
-import my_functions as mf
+import Printer as mf
 
 
 df_solar,  = mf.read_csv(["solar-produced.csv"], "2022-02-28")[0]
