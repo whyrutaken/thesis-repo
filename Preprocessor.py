@@ -20,21 +20,23 @@ class Preprocessor:
     power_imported_id = "Power imported from Grid (Wh)"
     power_exported_id = "Power exported to Grid (Wh)"
 
-    def make_tables(self, df: pd.DataFrame, id_list: list) -> list:
+
+
+    def extract_tables_and_set_index(self, df: pd.DataFrame, id_list: list) -> list:
         list_of_dfs = list()
         for id_ in id_list:
             table = df.loc[df["id"] == id_]
-            table = table.rename(columns={"value": id_}).set_index("timestamp")
+            table = table.rename(columns={"value": id_})
+            table = table.set_index("timestamp")
             table.index = pd.to_datetime(table.index)  # set index to DateTimeIndex
             table = table.reindex(index=table.index[::-1])  # reverse df
             del table["id"]
             list_of_dfs.append(table)
-
         return list_of_dfs
 
     def get_new_resolution_by_argument(self, df: pd.DataFrame, resolution: str) -> pd.DataFrame:
-        resampled_df = df.resample(resolution).max()
-        return resampled_df.fillna(value=0)
+        return df.resample(resolution).max().fillna(value=0)
+
 
     def set_df_valid_date(self, df: pd.DataFrame, date: str) -> pd.DataFrame:
         return df[:date]  # eliminate rows after 2022-03-01
@@ -48,10 +50,9 @@ class Preprocessor:
         df["add"] = df["date"].diff().ne("0D")
         # 3. add the previous total back
         df.loc[df["add"], new_column] += df[old_column].shift()[df["add"]]
-        df = df.fillna(0)
         del df["date"]
         del df["add"]
-        return df
+        return df.fillna(0)
 
     def calculate_consumption(self, imported: float, exported: float, solar: float) -> float:
         used = imported + solar
@@ -71,25 +72,27 @@ class Preprocessor:
         CDA = "consumption_daily_acc"
         CA = "consumption_absolute"
 
-        df = self.df_solar_resampled.copy()
-        df = df.rename(columns={"Solar energy produced (Wh)": SDA})
-        df[IDA] = self.df_power_imported_resampled.iloc[:, 0]
-        df[EDA] = self.df_power_exported_resampled.iloc[:, 0]
-        df[CDA] = df.apply(
+        master_df = self.df_solar_resampled.copy()
+        master_df = master_df.rename(columns={"Solar energy produced (Wh)": SDA})
+        master_df[IDA] = self.df_power_imported_resampled.iloc[:, 0]
+        master_df[EDA] = self.df_power_exported_resampled.iloc[:, 0]
+        master_df[CDA] = master_df.apply(
             lambda row: self.calculate_consumption(row[IDA], row[EDA], row[SDA]), axis=1)
 
-        df = self.get_abs_value_from_daily_acc(df, SDA, SA)
-        df = self.get_abs_value_from_daily_acc(df, CDA, CA)
+        master_df = self.get_abs_value_from_daily_acc(master_df, SDA, SA)
+        master_df = self.get_abs_value_from_daily_acc(master_df, CDA, CA)
 
-        df = self.del_lines(df, ["2020-01-01 00:00", "2020-03-29 02:00", "2021-03-28 02:00"])
-        return df
+        master_df = self.del_lines(master_df, ["2020-01-01 00:00", "2020-03-29 02:00", "2021-03-28 02:00"])
+        return master_df
+
+
 
     def __init__(self, valid_to: str):
         # telemetry data to separate tables
         df_telemetry = pd.read_csv("data/TelemetryData.csv", names=["id", "timestamp", "value"], parse_dates=True)
         df_telemetry = df_telemetry.replace(self.json_id_dictionary)  # Replace json ids with dictionary values
 
-        self.df_solar, self.df_power_imported, self.df_power_exported = self.make_tables(
+        self.df_solar, self.df_power_imported, self.df_power_exported = self.extract_tables_and_set_index(
             df_telemetry, [self.solar_id, self.power_imported_id, self.power_exported_id])
 
         # hourly resolution/resample
