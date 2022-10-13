@@ -1,7 +1,7 @@
 #%%
 
 import pandas as pd
-import Printer as mf
+import statistics as mf
 
 # deprecated
 def convert_total_to_daily_accumulation(df: pd.DataFrame) -> pd.DataFrame:
