@@ -20,7 +20,24 @@ class Preprocessor:
     power_imported_id = "Power imported from Grid (Wh)"
     power_exported_id = "Power exported to Grid (Wh)"
 
-    def extract_tables_and_set_index(self, df: pd.DataFrame, id_list: list) -> list:
+    def __init__(self, valid_to: str):
+        # telemetry data to separate tables
+        df_telemetry = pd.read_csv("data/TelemetryData.csv", names=["id", "timestamp", "value"], parse_dates=True)
+        df_telemetry = df_telemetry.replace(self.json_id_dictionary)  # Replace json ids with dictionary values
+
+        self.df_solar, self.df_power_imported, self.df_power_exported = self.create_tables_and_set_index(
+            df_telemetry, [self.solar_id, self.power_imported_id, self.power_exported_id])
+
+        # hourly resolution/resample
+        self.df_solar_resampled = self.get_new_resolution_by_argument(self.df_solar, "H")
+        self.df_power_imported_resampled = self.get_new_resolution_by_argument(self.df_power_imported, 'H')
+        self.df_power_exported_resampled = self.get_new_resolution_by_argument(self.df_power_exported, 'H')
+
+        self.df = self.create_master_df()
+        self.df = self.set_df_valid_date(self.df, valid_to)
+        self.export(self.df, "master_df.csv")
+
+    def create_tables_and_set_index(self, df: pd.DataFrame, id_list: list) -> list:
         list_of_dfs = list()
         for id_ in id_list:
             table = df.loc[df["id"] == id_]
@@ -87,26 +104,13 @@ class Preprocessor:
         master_df = self.del_lines(master_df, ["2020-01-01 00:00", "2020-03-29 02:00", "2021-03-28 02:00"])
         return master_df
 
-    def __init__(self, valid_to: str):
-        # telemetry data to separate tables
-        df_telemetry = pd.read_csv("data/TelemetryData.csv", names=["id", "timestamp", "value"], parse_dates=True)
-        df_telemetry = df_telemetry.replace(self.json_id_dictionary)  # Replace json ids with dictionary values
-
-        self.df_solar, self.df_power_imported, self.df_power_exported = self.extract_tables_and_set_index(
-            df_telemetry, [self.solar_id, self.power_imported_id, self.power_exported_id])
-
-        # hourly resolution/resample
-        self.df_solar_resampled = self.get_new_resolution_by_argument(self.df_solar, "H")
-        self.df_power_imported_resampled = self.get_new_resolution_by_argument(self.df_power_imported, 'H')
-        self.df_power_exported_resampled = self.get_new_resolution_by_argument(self.df_power_exported, 'H')
-
-        self.df = self.create_master_df()
-        self.df = self.set_df_valid_date(self.df, valid_to)
-
     def export_raw_data(self):
         self.df_solar.to_csv("solar-produced.csv")
         self.df_power_imported.to_csv("power-imported-from-grid.csv")
         self.df_power_exported.to_csv("power-exported-to-grid.csv")
+
+    def export(self, df:pd.DataFrame, filename: str):
+        df.to_csv(filename)
 
 
 preprocessor = Preprocessor("2022-02-28")
