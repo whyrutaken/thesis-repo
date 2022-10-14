@@ -37,7 +37,8 @@ class Preprocessor:
         self.df = self.set_df_valid_date(self.df, valid_to)
         self.export(self.df, "master_df.csv")
 
-    def create_tables_and_set_index(self, df: pd.DataFrame, id_list: list) -> list:
+    @staticmethod
+    def create_tables_and_set_index(df: pd.DataFrame, id_list: list) -> list:
         list_of_dfs = list()
         for id_ in id_list:
             table = df.loc[df["id"] == id_]
@@ -49,13 +50,16 @@ class Preprocessor:
             list_of_dfs.append(table)
         return list_of_dfs
 
-    def get_new_resolution_by_argument(self, df: pd.DataFrame, resolution: str) -> pd.DataFrame:
+    @staticmethod
+    def get_new_resolution_by_argument(df: pd.DataFrame, resolution: str) -> pd.DataFrame:
         return df.resample(resolution).max().fillna(value=0)
 
-    def set_df_valid_date(self, df: pd.DataFrame, date: str) -> pd.DataFrame:
+    @staticmethod
+    def set_df_valid_date(df: pd.DataFrame, date: str) -> pd.DataFrame:
         return df[:date]  # eliminate rows after 2022-03-01
 
-    def get_abs_value_from_daily_acc(self, df: pd.DataFrame, old_column: str, new_column: str) -> pd.DataFrame:
+    @staticmethod
+    def get_abs_value_from_daily_acc(df: pd.DataFrame, old_column: str, new_column: str) -> pd.DataFrame:
         df[new_column] = df[old_column].diff().fillna(0)  # get the difference of elements from previous elements
 
         # get date change locations where diff != 0 Days
@@ -68,12 +72,14 @@ class Preprocessor:
         del df["add"]
         return df.fillna(0)
 
-    def calculate_consumption(self, imported: float, exported: float, solar: float) -> float:
+    @staticmethod
+    def calculate_consumption(imported: float, exported: float, solar: float) -> float:
         used = imported + solar
         return used - exported
 
     # TODO: instead of deleting completely, you could inject the value from an hour before
-    def del_lines(self, df: pd.DataFrame, list_of_dates: list) -> pd.DataFrame:
+    @staticmethod
+    def del_lines(df: pd.DataFrame, list_of_dates: list) -> pd.DataFrame:
         for date in list_of_dates:
             df = df[~(df.index == date)]
         return df
@@ -109,8 +115,9 @@ class Preprocessor:
         self.df_power_imported.to_csv("power-imported-from-grid.csv")
         self.df_power_exported.to_csv("power-exported-to-grid.csv")
 
-    def export(self, df:pd.DataFrame, filename: str):
-        df.to_csv(filename)
+    @staticmethod
+    def export(df: pd.DataFrame, filename: str):
+        df.to_csv(filename, index_label=False)
 
 
 preprocessor = Preprocessor("2022-02-28")

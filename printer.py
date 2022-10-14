@@ -3,6 +3,18 @@ import pandas as pd
 import statistics as mf
 
 
+def plot_solar_vs_consumption(self, date: str):
+    self.df_hourly_res[date].solar_absolute.plot(legend=True)
+    self.df_hourly_res[date].consumption_absolute.plot(legend=True)
+    plt.show()
+
+
+def plot_autocorrelation(self, from_date: str, to_date: str):
+    x = pd.plotting.autocorrelation_plot(self.df_hourly_res.loc[from_date:to_date].consumption_absolute)
+    x.plot()
+    plt.show()
+
+
 df_solar,  = mf.read_csv(["solar-produced.csv"], "2022-02-28")[0]
 
 df_solar = mf.get_new_resolution_by_argument(df_solar, 'H')
