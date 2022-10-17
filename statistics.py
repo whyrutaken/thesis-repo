@@ -9,7 +9,7 @@ class Statistics:
 
         self.df_daily_max = self.get_daily_max()
         self.df_yearly_total = self.get_yearly_total(
-            ["solar_daily_acc", "imported_daily_acc", "exported_daily_acc", "consumption_daily_acc"])
+            ["solar_da", "imported_da", "exported_da", "consumption_da"])
 
         self.df_seasonal_total_acc = self.get_seasonal_statistics("total_acc",
                                                                   ["max_solar_da", "max_imported_da", "max_exported_da",
@@ -52,10 +52,10 @@ class Statistics:
                                                                   "mean_consumption_abs", "std_consumption_abs"])
 
         self.print_to_latex_in_kwh_rounded_up()
-        self.yearly_self_consumption = self.calculate_self_consumption(self.df_yearly_total, "solar_daily_acc",
-                                                                       "exported_daily_acc")
-        self.yearly_self_sufficiency = self.calculate_self_sufficiency(self.df_yearly_total, "solar_daily_acc",
-                                                                       "exported_daily_acc", "consumption_daily_acc")
+        self.yearly_self_consumption = self.calculate_self_consumption(self.df_yearly_total, "solar_da",
+                                                                       "exported_da")
+        self.yearly_self_sufficiency = self.calculate_self_sufficiency(self.df_yearly_total, "solar_da",
+                                                                       "exported_da", "consumption_da")
         self.seasonal_self_consumption = self.calculate_self_consumption(self.df_seasonal_total_acc, "total_solar_da",
                                                                          "total_exported_da")
 
@@ -131,13 +131,21 @@ class Statistics:
         return pd.concat(temp, axis=1).transpose()
 
     @staticmethod
+    def calculate_max_self_sufficiency(df: pd.DataFrame, solar_index: str, consumption_index: str):
+        return df.loc[solar_index] / df.loc[consumption_index]
+
+    @staticmethod
+    def calculate_self_sufficiency(df: pd.DataFrame, solar_index: str, exported_index: str, consumption_index: str):
+        return (df.loc[solar_index] - df.loc[exported_index]) / df.loc[consumption_index]
+
+    @staticmethod
     def calculate_self_consumption(df: pd.DataFrame, solar_index: str, exported_index: str):
         return (df.loc[solar_index] - df.loc[exported_index]) / \
                df.loc[solar_index]
 
     @staticmethod
-    def calculate_self_sufficiency(df: pd.DataFrame, solar_index: str, exported_index: str, consumption_index: str):
-        return (df.loc[solar_index] - df.loc[exported_index]) / df.loc[consumption_index]
+    def calculate_sold_solar(df: pd.DataFrame, solar_index: str, exported_index: str):
+        return df.loc[exported_index] / df.loc[solar_index]
 
 
 statistics = Statistics()

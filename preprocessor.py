@@ -87,10 +87,10 @@ class Preprocessor:
         return df
 
     def create_master_df(self):
-        SDA = "solar_daily_acc"
-        IDA = "imported_daily_acc"
-        EDA = "exported_daily_acc"
-        CDA = "consumption_daily_acc"
+        SDA = "solar_da"
+        IDA = "imported_da"
+        EDA = "exported_da"
+        CDA = "consumption_da"
 
         SA = "solar_absolute"
         IA = "imported_absolute"
