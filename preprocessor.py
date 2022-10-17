@@ -20,6 +20,7 @@ class Preprocessor:
     power_imported_id = "Power imported from Grid (Wh)"
     power_exported_id = "Power exported to Grid (Wh)"
 
+
     def __init__(self, valid_to: str):
         # telemetry data to separate tables
         df_telemetry = pd.read_csv("data/TelemetryData.csv", names=["id", "timestamp", "value"], parse_dates=True)
@@ -36,6 +37,7 @@ class Preprocessor:
         self.df = self.create_master_df()
         self.df = self.set_df_valid_date(self.df, valid_to)
         self.export(self.df, "master_df.csv")
+        self.export_raw_data()
 
     @staticmethod
     def create_tables_and_set_index(df: pd.DataFrame, id_list: list) -> list:
