@@ -11,28 +11,28 @@ class Statistics:
         self.df_yearly_total = self.get_yearly_total(
             ["solar_da", "imported_da", "exported_da", "consumption_da"])
 
-        self.df_seasonal_total_acc = self.get_seasonal_statistics("total_acc",
-                                                                  ["max_solar_da", "max_imported_da", "max_exported_da",
-                                                                   "max_consumption_da",
-                                                                   "min_solar_da", "min_imported_da", "min_exported_da",
-                                                                   "min_consumption_da",
-                                                                   "mean_solar_da", "mean_imported_da",
-                                                                   "mean_exported_da", "mean_consumption_da",
-                                                                   "std_solar_da", "std_imported_da", "std_exported_da",
-                                                                   "std_consumption_da",
-                                                                   "total_solar_da", "total_imported_da",
-                                                                   "total_exported_da", "total_consumption_da"],
-                                                                  ["max_solar_da", "min_solar_da", "mean_solar_da",
-                                                                   "std_solar_da", "total_solar_da",
-                                                                   "max_imported_da", "min_imported_da",
-                                                                   "mean_imported_da", "std_imported_da",
-                                                                   "total_imported_da",
-                                                                   "max_exported_da", "min_exported_da",
-                                                                   "mean_exported_da", "std_exported_da",
-                                                                   "total_exported_da",
-                                                                   "max_consumption_da", "min_consumption_da",
-                                                                   "mean_consumption_da", "std_consumption_da",
-                                                                   "total_consumption_da"])
+        self.df_seasonal_total = self.get_seasonal_statistics("total",
+                                                              ["max_solar_da", "max_imported_da", "max_exported_da",
+                                                               "max_consumption_da",
+                                                               "min_solar_da", "min_imported_da", "min_exported_da",
+                                                               "min_consumption_da",
+                                                               "mean_solar_da", "mean_imported_da",
+                                                               "mean_exported_da", "mean_consumption_da",
+                                                               "std_solar_da", "std_imported_da", "std_exported_da",
+                                                               "std_consumption_da",
+                                                               "total_solar_da", "total_imported_da",
+                                                               "total_exported_da", "total_consumption_da"],
+                                                              ["max_solar_da", "min_solar_da", "mean_solar_da",
+                                                               "std_solar_da", "total_solar_da",
+                                                               "max_imported_da", "min_imported_da",
+                                                               "mean_imported_da", "std_imported_da",
+                                                               "total_imported_da",
+                                                               "max_exported_da", "min_exported_da",
+                                                               "mean_exported_da", "std_exported_da",
+                                                               "total_exported_da",
+                                                               "max_consumption_da", "min_consumption_da",
+                                                               "mean_consumption_da", "std_consumption_da",
+                                                               "total_consumption_da"])
         self.df_seasonal_absolute = self.get_seasonal_statistics("absolute",
                                                                  ["max_solar_abs", "max_imported_abs",
                                                                   "max_exported_abs", "max_consumption_abs",
@@ -51,19 +51,18 @@ class Statistics:
                                                                   "max_consumption_abs", "min_consumption_abs",
                                                                   "mean_consumption_abs", "std_consumption_abs"])
 
+        self.df_seasonal_metrics = self.get_metrics(self.df_seasonal_total, "total_solar_da", "total_exported_da",
+                                                    "total_consumption_da")
+        self.df_yearly_metrics = self.get_metrics(self.df_yearly_total, "solar_da", "exported_da",
+                                                  "consumption_da")
         self.print_to_latex_in_kwh_rounded_up()
-        self.yearly_self_consumption = self.calculate_self_consumption(self.df_yearly_total, "solar_da",
-                                                                       "exported_da")
-        self.yearly_self_sufficiency = self.calculate_self_sufficiency(self.df_yearly_total, "solar_da",
-                                                                       "exported_da", "consumption_da")
-        self.seasonal_self_consumption = self.calculate_self_consumption(self.df_seasonal_total_acc, "total_solar_da",
-                                                                         "total_exported_da")
 
     def print_to_latex_in_kwh_rounded_up(self):
         pd.options.display.float_format = '{:,}'.format
-        print(self.df_seasonal_total_acc.div(1000).round(1).to_latex())
+        print(self.df_seasonal_total.div(1000).round(1).to_latex())
         print(self.df_seasonal_absolute.div(1000).round(1).to_latex())
         print(self.df_yearly_total.div(1000).round(1).to_latex())
+        print(self.df_seasonal_metrics.mul(100).round(2).to_latex())
 
     @staticmethod
     def get_season(df: pd.DataFrame) -> pd.DataFrame:
@@ -104,7 +103,7 @@ class Statistics:
         first_column = 0
         last_column = 0
         df = None
-        if type_ == "total_acc":
+        if type_ == "total":
             df = self.get_season(self.df_daily_max)
             last_column = 4
         if type_ == "absolute":
@@ -131,21 +130,34 @@ class Statistics:
         return pd.concat(temp, axis=1).transpose()
 
     @staticmethod
-    def calculate_max_self_sufficiency(df: pd.DataFrame, solar_index: str, consumption_index: str):
+    def calculate_max_self_sufficiency(df: pd.DataFrame, solar_index: str, consumption_index: str) -> pd.Series:
         return df.loc[solar_index] / df.loc[consumption_index]
 
     @staticmethod
-    def calculate_self_sufficiency(df: pd.DataFrame, solar_index: str, exported_index: str, consumption_index: str):
+    def calculate_self_sufficiency(df: pd.DataFrame, solar_index: str, exported_index: str,
+                                   consumption_index: str) -> pd.Series:
         return (df.loc[solar_index] - df.loc[exported_index]) / df.loc[consumption_index]
 
     @staticmethod
-    def calculate_self_consumption(df: pd.DataFrame, solar_index: str, exported_index: str):
+    def calculate_self_consumption(df: pd.DataFrame, solar_index: str, exported_index: str) -> pd.Series:
         return (df.loc[solar_index] - df.loc[exported_index]) / \
                df.loc[solar_index]
 
     @staticmethod
-    def calculate_sold_solar(df: pd.DataFrame, solar_index: str, exported_index: str):
+    def calculate_sold_solar(df: pd.DataFrame, solar_index: str, exported_index: str) -> pd.Series:
         return df.loc[exported_index] / df.loc[solar_index]
+
+    def get_metrics(self, df: pd.DataFrame, solar_index: str, exported_index: str,
+                    consumption_index: str) -> pd.DataFrame:
+        max_self_sufficiency = self.calculate_max_self_sufficiency(df, solar_index, consumption_index)
+        self_sufficiency = self.calculate_self_sufficiency(df, solar_index, exported_index, consumption_index)
+        self_consumption = self.calculate_self_consumption(df, solar_index, exported_index)
+        sold_solar = self.calculate_sold_solar(df, solar_index, exported_index)
+
+        df = pd.concat([max_self_sufficiency, self_sufficiency, self_consumption, sold_solar], axis=1,
+                       ignore_index=True)
+        df.columns = ["max_self_sufficiency", "self_sufficiency", "self_consumption", "sold_solar_percentage"]
+        return df.transpose()
 
 
 statistics = Statistics()
