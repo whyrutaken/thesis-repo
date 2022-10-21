@@ -20,7 +20,6 @@ class Preprocessor:
     power_imported_id = "Power imported from Grid (Wh)"
     power_exported_id = "Power exported to Grid (Wh)"
 
-
     def __init__(self, valid_to: str):
         # telemetry data to separate tables
         df_telemetry = pd.read_csv("data/TelemetryData.csv", names=["id", "timestamp", "value"], parse_dates=True)
@@ -53,7 +52,8 @@ class Preprocessor:
         return list_of_dfs
 
     @staticmethod
-    def get_new_resolution_by_argument(df: pd.DataFrame, resolution: str) -> pd.DataFrame:
+    def get_new_resolution_by_argument(df: pd.DataFrame, resolution: str) \
+            -> pd.DataFrame:
         return df.resample(resolution).max().fillna(value=0)
 
     @staticmethod
@@ -61,7 +61,8 @@ class Preprocessor:
         return df[:date]  # eliminate rows after 2022-03-01
 
     @staticmethod
-    def get_abs_value_from_daily_acc(df: pd.DataFrame, old_column: str, new_column: str) -> pd.DataFrame:
+    def get_abs_value_from_daily_acc(df: pd.DataFrame, old_column: str, new_column: str) \
+            -> pd.DataFrame:
         df[new_column] = df[old_column].diff().fillna(0)  # get the difference of elements from previous elements
 
         # get date change locations where diff != 0 Days
@@ -76,8 +77,7 @@ class Preprocessor:
 
     @staticmethod
     def calculate_consumption(imported: float, exported: float, solar: float) -> float:
-        used = imported + solar
-        return used - exported
+        return imported + solar - exported
 
     # TODO: instead of deleting completely, you could inject the value from an hour before
     @staticmethod
