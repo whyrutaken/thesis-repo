@@ -1,27 +1,27 @@
 import pandas as pd
-
+from typing import List
 
 # only reading the data, not changing it
 class Statistics:
 
     def __init__(self):
-        self.df_hourly_res = pd.read_csv("master_df.csv", parse_dates=True)
+        self.df_hourly_res = pd.read_csv("master-df.csv", parse_dates=True)
 
         self.df_daily_max = self.get_daily_max()
         self.df_yearly_total = self.get_yearly_total(
-            ["solar_da", "imported_da", "exported_da", "consumption_da"])
+            ["solar_da", "imported_da", "exported_da", "demand_da"])
 
         self.df_seasonal_total = self.get_seasonal_statistics("total", False,
                                                               ["max_solar_da", "max_imported_da", "max_exported_da",
-                                                               "max_consumption_da",
+                                                               "max_demand_da",
                                                                "min_solar_da", "min_imported_da", "min_exported_da",
-                                                               "min_consumption_da",
+                                                               "min_demand_da",
                                                                "mean_solar_da", "mean_imported_da",
-                                                               "mean_exported_da", "mean_consumption_da",
+                                                               "mean_exported_da", "mean_demand_da",
                                                                "std_solar_da", "std_imported_da", "std_exported_da",
-                                                               "std_consumption_da",
+                                                               "std_demand_da",
                                                                "total_solar_da", "total_imported_da",
-                                                               "total_exported_da", "total_consumption_da"],
+                                                               "total_exported_da", "total_demand_da"],
                                                               ["max_solar_da", "min_solar_da", "mean_solar_da",
                                                                "std_solar_da", "total_solar_da",
                                                                "max_imported_da", "min_imported_da",
@@ -30,50 +30,50 @@ class Statistics:
                                                                "max_exported_da", "min_exported_da",
                                                                "mean_exported_da", "std_exported_da",
                                                                "total_exported_da",
-                                                               "max_consumption_da", "min_consumption_da",
-                                                               "mean_consumption_da", "std_consumption_da",
-                                                               "total_consumption_da"])
+                                                               "max_demand_da", "min_demand_da",
+                                                               "mean_demand_da", "std_demand_da",
+                                                               "total_demand_da"])
         self.df_seasonal_absolute = self.get_seasonal_statistics("absolute", False,
                                                                  ["max_solar_abs", "max_imported_abs",
-                                                                  "max_exported_abs", "max_consumption_abs",
+                                                                  "max_exported_abs", "max_demand_abs",
                                                                   "min_solar_abs", "min_imported_abs",
-                                                                  "min_exported_abs", "min_consumption_abs",
+                                                                  "min_exported_abs", "min_demand_abs",
                                                                   "mean_solar_abs", "mean_imported_abs",
-                                                                  "mean_exported_abs", "mean_consumption_abs",
+                                                                  "mean_exported_abs", "mean_demand_abs",
                                                                   "std_solar_abs", "std_imported_abs",
-                                                                  "std_exported_abs", "std_consumption_abs"],
+                                                                  "std_exported_abs", "std_demand_abs"],
                                                                  ["max_solar_abs", "min_solar_abs", "mean_solar_abs",
                                                                   "std_solar_abs",
                                                                   "max_imported_abs", "min_imported_abs",
                                                                   "mean_imported_abs", "std_imported_abs",
                                                                   "max_exported_abs", "min_exported_abs",
                                                                   "mean_exported_abs", "std_exported_abs",
-                                                                  "max_consumption_abs", "min_consumption_abs",
-                                                                  "mean_consumption_abs", "std_consumption_abs"])
+                                                                  "max_demand_abs", "min_demand_abs",
+                                                                  "mean_demand_abs", "std_demand_abs"])
 
         self.df_seasonal_weekly_total = self.get_seasonal_statistics("total", True,
                                                                      ["wd_max_solar_da", "wd_max_imported_da",
                                                                       "wd_max_exported_da",
-                                                                      "wd_max_consumption_da",
+                                                                      "wd_max_demand_da",
                                                                       "wd_min_solar_da", "wd_min_imported_da",
                                                                       "wd_min_exported_da",
-                                                                      "wd_min_consumption_da",
+                                                                      "wd_min_demand_da",
                                                                       "wd_mean_solar_da", "wd_mean_imported_da",
-                                                                      "wd_mean_exported_da", "wd_mean_consumption_da",
+                                                                      "wd_mean_exported_da", "wd_mean_demand_da",
                                                                       "wd_std_solar_da", "wd_std_imported_da",
                                                                       "wd_std_exported_da",
-                                                                      "wd_std_consumption_da",
+                                                                      "wd_std_demand_da",
                                                                       "we_max_solar_da", "we_max_imported_da",
                                                                       "we_max_exported_da",
-                                                                      "we_max_consumption_da",
+                                                                      "we_max_demand_da",
                                                                       "we_min_solar_da", "we_min_imported_da",
                                                                       "we_min_exported_da",
-                                                                      "we_min_consumption_da",
+                                                                      "we_min_demand_da",
                                                                       "we_mean_solar_da", "we_mean_imported_da",
-                                                                      "we_mean_exported_da", "we_mean_consumption_da",
+                                                                      "we_mean_exported_da", "we_mean_demand_da",
                                                                       "we_std_solar_da", "we_std_imported_da",
                                                                       "we_std_exported_da",
-                                                                      "we_std_consumption_da",
+                                                                      "we_std_demand_da",
                                                                       ],
 
                                                                      ["wd_max_solar_da", "we_max_solar_da",
@@ -92,38 +92,38 @@ class Statistics:
                                                                       "wd_mean_exported_da", "we_mean_exported_da",
                                                                       "wd_std_exported_da",
                                                                       "we_std_exported_da",
-                                                                      "wd_max_consumption_da", "we_max_consumption_da",
-                                                                      "wd_min_consumption_da",
-                                                                      "we_min_consumption_da",
-                                                                      "wd_mean_consumption_da",
-                                                                      "we_mean_consumption_da",
-                                                                      "wd_std_consumption_da",
-                                                                      "we_std_consumption_da"])
+                                                                      "wd_max_demand_da", "we_max_demand_da",
+                                                                      "wd_min_demand_da",
+                                                                      "we_min_demand_da",
+                                                                      "wd_mean_demand_da",
+                                                                      "we_mean_demand_da",
+                                                                      "wd_std_demand_da",
+                                                                      "we_std_demand_da"])
         self.df_seasonal_weekly_absolute = self.get_seasonal_statistics("absolute", True,
                                                                         ["wd_max_solar_abs", "wd_max_imported_abs",
                                                                          "wd_max_exported_abs",
-                                                                         "wd_max_consumption_abs",
+                                                                         "wd_max_demand_abs",
                                                                          "wd_min_solar_abs", "wd_min_imported_abs",
                                                                          "wd_min_exported_abs",
-                                                                         "wd_min_consumption_abs",
+                                                                         "wd_min_demand_abs",
                                                                          "wd_mean_solar_abs", "wd_mean_imported_abs",
                                                                          "wd_mean_exported_abs",
-                                                                         "wd_mean_consumption_abs",
+                                                                         "wd_mean_demand_abs",
                                                                          "wd_std_solar_abs", "wd_std_imported_abs",
                                                                          "wd_std_exported_abs",
-                                                                         "wd_std_consumption_abs",
+                                                                         "wd_std_demand_abs",
                                                                          "we_max_solar_abs", "we_max_imported_abs",
                                                                          "we_max_exported_abs",
-                                                                         "we_max_consumption_abs",
+                                                                         "we_max_demand_abs",
                                                                          "we_min_solar_abs", "we_min_imported_abs",
                                                                          "we_min_exported_abs",
-                                                                         "we_min_consumption_abs",
+                                                                         "we_min_demand_abs",
                                                                          "we_mean_solar_abs", "we_mean_imported_abs",
                                                                          "we_mean_exported_abs",
-                                                                         "we_mean_consumption_abs",
+                                                                         "we_mean_demand_abs",
                                                                          "we_std_solar_abs", "we_std_imported_abs",
                                                                          "we_std_exported_abs",
-                                                                         "we_std_consumption_abs"],
+                                                                         "we_std_demand_abs"],
                                                                         ["wd_max_solar_abs", "we_max_solar_abs",
                                                                          "wd_min_solar_abs",
                                                                          "we_min_solar_abs",
@@ -143,19 +143,19 @@ class Statistics:
                                                                          "wd_mean_exported_abs", "we_mean_exported_abs",
                                                                          "wd_std_exported_abs",
                                                                          "we_std_exported_abs",
-                                                                         "wd_max_consumption_abs",
-                                                                         "we_max_consumption_abs",
-                                                                         "wd_min_consumption_abs",
-                                                                         "we_min_consumption_abs",
-                                                                         "wd_mean_consumption_abs",
-                                                                         "we_mean_consumption_abs",
-                                                                         "wd_std_consumption_abs",
-                                                                         "we_std_consumption_abs"])
+                                                                         "wd_max_demand_abs",
+                                                                         "we_max_demand_abs",
+                                                                         "wd_min_demand_abs",
+                                                                         "we_min_demand_abs",
+                                                                         "wd_mean_demand_abs",
+                                                                         "we_mean_demand_abs",
+                                                                         "wd_std_demand_abs",
+                                                                         "we_std_demand_abs"])
 
         self.df_seasonal_metrics = self.get_metrics(self.df_seasonal_total, "total_solar_da", "total_exported_da",
-                                                    "total_consumption_da")
+                                                    "total_demand_da")
         self.df_yearly_metrics = self.get_metrics(self.df_yearly_total, "solar_da", "exported_da",
-                                                  "consumption_da")
+                                                  "demand_da")
         self.print_to_latex_in_kwh_rounded_up()
 
     def print_to_latex_in_kwh_rounded_up(self):
@@ -218,20 +218,20 @@ class Statistics:
         df.index = index_names
         return df
 
-    def get_seasonal_statistics(self, type_: str, weekly_division: bool, column_names: list,
-                                ordered_column_names: list) -> pd.DataFrame:
+    def which_type(self, type_) -> [pd.DataFrame, int, int]:
+        if type_ == "total":
+            return [self.get_season(self.df_daily_max), 0, 4]
+        elif type_ == "absolute":
+            return [self.get_season(self.df_hourly_res), 4, 8]
+        else:
+            raise Exception("Not proper type.")
+
+    def get_seasonal_statistics(self, type_: str, weekly_division: bool, column_names: List[str],
+                                ordered_column_names: List[str]) -> pd.DataFrame:
         index_2020 = ["Autumn_2020", "Spring_2020", "Summer_2020", "Winter_2020"]
         index_2021 = ["Autumn_2021", "Spring_2021", "Summer_2021", "Winter_2021"]
-        first_column = 0
-        last_column = 0
-        df = None
-        if type_ == "total":
-            df = self.get_season(self.df_daily_max)
-            last_column = 4
-        if type_ == "absolute":
-            first_column = 4
-            last_column = 8
-            df = self.get_season(self.df_hourly_res)
+
+        df, first_column, last_column = self.which_type(type_)
 
         if weekly_division:
             df_season_2020 = self.calculate_seasonal_weekly_statistics(df, "2020-01-01", "2020-12-31", first_column,
@@ -261,13 +261,13 @@ class Statistics:
         return pd.concat(temp, axis=1).transpose()
 
     @staticmethod
-    def calculate_max_self_sufficiency(df: pd.DataFrame, solar_index: str, consumption_index: str) -> pd.Series:
-        return df.loc[solar_index] / df.loc[consumption_index]
+    def calculate_max_self_sufficiency(df: pd.DataFrame, solar_index: str, demand_index: str) -> pd.Series:
+        return df.loc[solar_index] / df.loc[demand_index]
 
     @staticmethod
     def calculate_self_sufficiency(df: pd.DataFrame, solar_index: str, exported_index: str,
-                                   consumption_index: str) -> pd.Series:
-        return (df.loc[solar_index] - df.loc[exported_index]) / df.loc[consumption_index]
+                                   demand_index: str) -> pd.Series:
+        return (df.loc[solar_index] - df.loc[exported_index]) / df.loc[demand_index]
 
     @staticmethod
     def calculate_self_consumption(df: pd.DataFrame, solar_index: str, exported_index: str) -> pd.Series:
@@ -279,9 +279,9 @@ class Statistics:
         return df.loc[exported_index] / df.loc[solar_index]
 
     def get_metrics(self, df: pd.DataFrame, solar_index: str, exported_index: str,
-                    consumption_index: str) -> pd.DataFrame:
-        max_self_sufficiency = self.calculate_max_self_sufficiency(df, solar_index, consumption_index)
-        self_sufficiency = self.calculate_self_sufficiency(df, solar_index, exported_index, consumption_index)
+                    demand_index: str) -> pd.DataFrame:
+        max_self_sufficiency = self.calculate_max_self_sufficiency(df, solar_index, demand_index)
+        self_sufficiency = self.calculate_self_sufficiency(df, solar_index, exported_index, demand_index)
         self_consumption = self.calculate_self_consumption(df, solar_index, exported_index)
         sold_solar = self.calculate_sold_solar(df, solar_index, exported_index)
 

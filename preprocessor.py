@@ -35,7 +35,7 @@ class Preprocessor:
 
         self.df = self.create_master_df()
         self.df = self.set_df_valid_date(self.df, valid_to)
-        self.export(self.df, "master_df.csv")
+        self.export(self.df, "master-df.csv")
         self.export_raw_data()
 
     @staticmethod
@@ -76,7 +76,7 @@ class Preprocessor:
         return df.fillna(0)
 
     @staticmethod
-    def calculate_consumption(imported: float, exported: float, solar: float) -> float:
+    def calculate_demand(imported: float, exported: float, solar: float) -> float:
         return imported + solar - exported
 
     # TODO: instead of deleting completely, you could inject the value from an hour before
@@ -90,32 +90,32 @@ class Preprocessor:
         SDA = "solar_da"
         IDA = "imported_da"
         EDA = "exported_da"
-        CDA = "consumption_da"
+        DDA = "demand_da"
 
         SA = "solar_absolute"
         IA = "imported_absolute"
         EA = "exported_absolute"
-        CA = "consumption_absolute"
+        DA = "demand_absolute"
 
         master_df = self.df_solar_resampled.copy()
         master_df = master_df.rename(columns={"Solar energy produced (Wh)": SDA})
         master_df[IDA] = self.df_power_imported_resampled.iloc[:, 0]
         master_df[EDA] = self.df_power_exported_resampled.iloc[:, 0]
-        master_df[CDA] = master_df.apply(
-            lambda row: self.calculate_consumption(row[IDA], row[EDA], row[SDA]), axis=1)
+        master_df[DDA] = master_df.apply(
+            lambda row: self.calculate_demand(row[IDA], row[EDA], row[SDA]), axis=1)
 
         master_df = self.get_abs_value_from_daily_acc(master_df, SDA, SA)
         master_df = self.get_abs_value_from_daily_acc(master_df, IDA, IA)
         master_df = self.get_abs_value_from_daily_acc(master_df, EDA, EA)
-        master_df = self.get_abs_value_from_daily_acc(master_df, CDA, CA)
+        master_df = self.get_abs_value_from_daily_acc(master_df, DDA, DA)
 
         master_df = self.del_lines(master_df, ["2020-01-01 00:00", "2020-03-29 02:00", "2021-03-28 02:00"])
         return master_df
 
     def export_raw_data(self):
         self.df_solar.to_csv("solar-produced.csv")
-        self.df_power_imported.to_csv("power-imported-from-grid.csv")
-        self.df_power_exported.to_csv("power-exported-to-grid.csv")
+        self.df_power_imported.to_csv("power-imported.csv")
+        self.df_power_exported.to_csv("power-exported.csv")
 
     @staticmethod
     def export(df: pd.DataFrame, filename: str):
