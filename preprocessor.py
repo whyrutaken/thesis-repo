@@ -21,6 +21,7 @@ class Preprocessor:
     power_exported_id = "Power exported to Grid (Wh)"
 
     def __init__(self, valid_to: str):
+        pd.set_option('display.precision', 1)
         # telemetry data to separate tables
         df_telemetry = pd.read_csv("data/TelemetryData.csv", names=["id", "timestamp", "value"], parse_dates=True)
         df_telemetry = df_telemetry.replace(self.json_id_dictionary)  # Replace json ids with dictionary values

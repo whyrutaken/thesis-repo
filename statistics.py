@@ -1,10 +1,13 @@
 import pandas as pd
 from typing import List
 
+
 # only reading the data, not changing it
 class Statistics:
 
     def __init__(self):
+        pd.set_option('display.precision', 1)
+
         self.df_hourly_res = pd.read_csv("master-df.csv", parse_dates=True)
 
         self.df_daily_max = self.get_daily_max()
@@ -18,20 +21,28 @@ class Statistics:
                                                                "min_demand_da",
                                                                "mean_solar_da", "mean_imported_da",
                                                                "mean_exported_da", "mean_demand_da",
+                                                               "median_solar_da", "median_imported_da",
+                                                               "median_exported_da", "median_demand_da",
+                                                               "mode_solar_da", "mode_imported_da",
+                                                               "mode_exported_da", "mode_demand_da",
                                                                "std_solar_da", "std_imported_da", "std_exported_da",
                                                                "std_demand_da",
                                                                "total_solar_da", "total_imported_da",
                                                                "total_exported_da", "total_demand_da"],
                                                               ["max_solar_da", "min_solar_da", "mean_solar_da",
+                                                               "median_solar_da", "mode_solar_da",
                                                                "std_solar_da", "total_solar_da",
                                                                "max_imported_da", "min_imported_da",
-                                                               "mean_imported_da", "std_imported_da",
+                                                               "mean_imported_da", "median_imported_da",
+                                                               "mode_imported_da", "std_imported_da",
                                                                "total_imported_da",
                                                                "max_exported_da", "min_exported_da",
-                                                               "mean_exported_da", "std_exported_da",
+                                                               "mean_exported_da", "median_exported_da",
+                                                               "mode_exported_da", "std_exported_da",
                                                                "total_exported_da",
                                                                "max_demand_da", "min_demand_da",
-                                                               "mean_demand_da", "std_demand_da",
+                                                               "mean_demand_da", "median_demand_da", "mode_demand_da",
+                                                               "std_demand_da",
                                                                "total_demand_da"])
         self.df_seasonal_absolute = self.get_seasonal_statistics("absolute", False,
                                                                  ["max_solar_abs", "max_imported_abs",
@@ -40,16 +51,24 @@ class Statistics:
                                                                   "min_exported_abs", "min_demand_abs",
                                                                   "mean_solar_abs", "mean_imported_abs",
                                                                   "mean_exported_abs", "mean_demand_abs",
+                                                                  "median_solar_abs", "median_imported_abs",
+                                                                  "median_exported_abs", "median_demand_abs",
+                                                                  "mode_solar_abs", "mode_imported_abs",
+                                                                  "mode_exported_abs", "mode_demand_abs",
                                                                   "std_solar_abs", "std_imported_abs",
                                                                   "std_exported_abs", "std_demand_abs"],
                                                                  ["max_solar_abs", "min_solar_abs", "mean_solar_abs",
+                                                                  "median_solar_abs", "mode_solar_abs",
                                                                   "std_solar_abs",
                                                                   "max_imported_abs", "min_imported_abs",
-                                                                  "mean_imported_abs", "std_imported_abs",
+                                                                  "mean_imported_abs", "median_imported_abs",
+                                                                  "mode_imported_abs", "std_imported_abs",
                                                                   "max_exported_abs", "min_exported_abs",
-                                                                  "mean_exported_abs", "std_exported_abs",
+                                                                  "mean_exported_abs", "median_exported_abs",
+                                                                  "mode_exported_abs", "std_exported_abs",
                                                                   "max_demand_abs", "min_demand_abs",
-                                                                  "mean_demand_abs", "std_demand_abs"])
+                                                                  "mean_demand_abs", "median_demand_abs",
+                                                                  "mode_demand_abs", "std_demand_abs"])
 
         self.df_seasonal_weekly_total = self.get_seasonal_statistics("total", True,
                                                                      ["wd_max_solar_da", "wd_max_imported_da",
@@ -60,6 +79,10 @@ class Statistics:
                                                                       "wd_min_demand_da",
                                                                       "wd_mean_solar_da", "wd_mean_imported_da",
                                                                       "wd_mean_exported_da", "wd_mean_demand_da",
+                                                                      "wd_median_solar_da", "wd_median_imported_da",
+                                                                      "wd_median_exported_da", "wd_median_demand_da",
+                                                                      "wd_mode_solar_da", "wd_mode_imported_da",
+                                                                      "wd_mode_exported_da", "wd_mode_demand_da",
                                                                       "wd_std_solar_da", "wd_std_imported_da",
                                                                       "wd_std_exported_da",
                                                                       "wd_std_demand_da",
@@ -71,6 +94,10 @@ class Statistics:
                                                                       "we_min_demand_da",
                                                                       "we_mean_solar_da", "we_mean_imported_da",
                                                                       "we_mean_exported_da", "we_mean_demand_da",
+                                                                      "we_median_solar_da", "we_median_imported_da",
+                                                                      "we_median_exported_da", "we_median_demand_da",
+                                                                      "we_mode_solar_da", "we_mode_imported_da",
+                                                                      "we_mode_exported_da", "we_mode_demand_da",
                                                                       "we_std_solar_da", "we_std_imported_da",
                                                                       "we_std_exported_da",
                                                                       "we_std_demand_da",
@@ -79,17 +106,23 @@ class Statistics:
                                                                      ["wd_max_solar_da", "we_max_solar_da",
                                                                       "wd_min_solar_da", "we_min_solar_da",
                                                                       "wd_mean_solar_da", "we_mean_solar_da",
+                                                                      "wd_median_solar_da", "we_median_solar_da",
+                                                                      "wd_mode_solar_da", "we_mode_solar_da",
                                                                       "wd_std_solar_da", "we_std_solar_da",
                                                                       "wd_max_imported_da", "we_max_imported_da",
                                                                       "wd_min_imported_da",
                                                                       "we_min_imported_da",
                                                                       "wd_mean_imported_da", "we_mean_imported_da",
+                                                                      "wd_median_imported_da", "we_median_imported_da",
+                                                                      "wd_mode_imported_da", "we_mode_imported_da",
                                                                       "wd_std_imported_da",
                                                                       "we_std_imported_da",
                                                                       "wd_max_exported_da", "we_max_exported_da",
                                                                       "wd_min_exported_da",
                                                                       "we_min_exported_da",
                                                                       "wd_mean_exported_da", "we_mean_exported_da",
+                                                                      "wd_median_exported_da", "we_median_exported_da",
+                                                                      "wd_mode_exported_da", "we_mode_exported_da",
                                                                       "wd_std_exported_da",
                                                                       "we_std_exported_da",
                                                                       "wd_max_demand_da", "we_max_demand_da",
@@ -97,6 +130,10 @@ class Statistics:
                                                                       "we_min_demand_da",
                                                                       "wd_mean_demand_da",
                                                                       "we_mean_demand_da",
+                                                                      "wd_median_demand_da",
+                                                                      "we_median_demand_da",
+                                                                      "wd_mode_demand_da",
+                                                                      "we_mode_demand_da",
                                                                       "wd_std_demand_da",
                                                                       "we_std_demand_da"])
         self.df_seasonal_weekly_absolute = self.get_seasonal_statistics("absolute", True,
@@ -109,6 +146,13 @@ class Statistics:
                                                                          "wd_mean_solar_abs", "wd_mean_imported_abs",
                                                                          "wd_mean_exported_abs",
                                                                          "wd_mean_demand_abs",
+                                                                         "wd_median_solar_abs",
+                                                                         "wd_median_imported_abs",
+                                                                         "wd_median_exported_abs",
+                                                                         "wd_median_demand_abs",
+                                                                         "wd_mode_solar_abs", "wd_mode_imported_abs",
+                                                                         "wd_mode_exported_abs",
+                                                                         "wd_mode_demand_abs",
                                                                          "wd_std_solar_abs", "wd_std_imported_abs",
                                                                          "wd_std_exported_abs",
                                                                          "wd_std_demand_abs",
@@ -121,6 +165,13 @@ class Statistics:
                                                                          "we_mean_solar_abs", "we_mean_imported_abs",
                                                                          "we_mean_exported_abs",
                                                                          "we_mean_demand_abs",
+                                                                         "we_median_solar_abs",
+                                                                         "we_median_imported_abs",
+                                                                         "we_median_exported_abs",
+                                                                         "we_median_demand_abs",
+                                                                         "we_mode_solar_abs", "we_mode_imported_abs",
+                                                                         "we_mode_exported_abs",
+                                                                         "we_mode_demand_abs",
                                                                          "we_std_solar_abs", "we_std_imported_abs",
                                                                          "we_std_exported_abs",
                                                                          "we_std_demand_abs"],
@@ -128,6 +179,8 @@ class Statistics:
                                                                          "wd_min_solar_abs",
                                                                          "we_min_solar_abs",
                                                                          "wd_mean_solar_abs", "we_mean_solar_abs",
+                                                                         "wd_median_solar_abs", "we_median_solar_abs",
+                                                                         "wd_mode_solar_abs", "we_mode_solar_abs",
                                                                          "wd_std_solar_abs",
                                                                          "we_std_solar_abs",
                                                                          "wd_max_imported_abs",
@@ -135,12 +188,19 @@ class Statistics:
                                                                          "wd_min_imported_abs", "we_min_imported_abs",
                                                                          "wd_mean_imported_abs",
                                                                          "we_mean_imported_abs",
+                                                                         "wd_median_imported_abs",
+                                                                         "we_median_imported_abs",
+                                                                         "wd_mode_imported_abs",
+                                                                         "we_mode_imported_abs",
                                                                          "wd_std_imported_abs", "we_std_imported_abs",
 
                                                                          "wd_max_exported_abs", "we_max_exported_abs",
                                                                          "wd_min_exported_abs",
                                                                          "we_min_exported_abs",
                                                                          "wd_mean_exported_abs", "we_mean_exported_abs",
+                                                                         "wd_median_exported_abs",
+                                                                         "we_median_exported_abs",
+                                                                         "wd_mode_exported_abs", "we_mode_exported_abs",
                                                                          "wd_std_exported_abs",
                                                                          "we_std_exported_abs",
                                                                          "wd_max_demand_abs",
@@ -149,6 +209,10 @@ class Statistics:
                                                                          "we_min_demand_abs",
                                                                          "wd_mean_demand_abs",
                                                                          "we_mean_demand_abs",
+                                                                         "wd_median_demand_abs",
+                                                                         "we_median_demand_abs",
+                                                                         "wd_mode_demand_abs",
+                                                                         "we_mode_demand_abs",
                                                                          "wd_std_demand_abs",
                                                                          "we_std_demand_abs"])
 
@@ -186,9 +250,11 @@ class Statistics:
         max_ = df[begin_date:end_date].groupby(["season_name"]).max().iloc[:, first_col:last_col]
         min_ = df[begin_date:end_date].groupby(["season_name"]).min().iloc[:, first_col:last_col]
         mean_ = df[begin_date:end_date].groupby(["season_name"]).mean().iloc[:, first_col:last_col]
+        median_ = df[begin_date:end_date].groupby(["season_name"]).median().iloc[:, first_col:last_col]
+        mode_ = df[begin_date:end_date].groupby(["season_name"]).mode().iloc[:, first_col:last_col]
         std_ = df[begin_date:end_date].groupby(["season_name"]).std().iloc[:, first_col:last_col]
         sum_ = df[begin_date:end_date].groupby(["season_name"]).sum().iloc[:, first_col:last_col]
-        return [max_, min_, mean_, std_, sum_]
+        return [max_, min_, mean_, median_, mode_, std_, sum_]
 
     def calculate_seasonal_everyday_statistics(self, type_: str, df: pd.DataFrame, begin_date: str, end_date: str,
                                                first_col: int, last_col: int, column_names,
