@@ -44,6 +44,7 @@ class Statistics:
                                                                "mean_demand_da", "median_demand_da", "mode_demand_da",
                                                                "std_demand_da",
                                                                "total_demand_da"])
+        
         self.df_seasonal_absolute = self.get_seasonal_statistics("absolute", False,
                                                                  ["max_solar_abs", "max_imported_abs",
                                                                   "max_exported_abs", "max_demand_abs",
