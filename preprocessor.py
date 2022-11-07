@@ -23,7 +23,7 @@ class Preprocessor:
     def __init__(self, valid_to: str):
         pd.set_option('display.precision', 1)
         # telemetry data to separate tables
-        df_telemetry = pd.read_csv("data/TelemetryData.csv", names=["id", "timestamp", "value"], parse_dates=True)
+        df_telemetry = pd.read_csv("initial-data/TelemetryData.csv", names=["id", "timestamp", "value"], parse_dates=True)
         df_telemetry = df_telemetry.replace(self.json_id_dictionary)  # Replace json ids with dictionary values
 
         self.df_solar, self.df_power_imported, self.df_power_exported = self.create_tables_and_set_index(
@@ -114,9 +114,10 @@ class Preprocessor:
         return master_df
 
     def export_raw_data(self):
-        self.df_solar.to_csv("solar-produced.csv")
-        self.df_power_imported.to_csv("power-imported.csv")
-        self.df_power_exported.to_csv("power-exported.csv")
+
+        self.df_solar.to_csv("extracted-data/solar-produced.csv")
+        self.df_power_imported.to_csv("extracted-data/power-imported.csv")
+        self.df_power_exported.to_csv("extracted-data/power-exported.csv")
 
     @staticmethod
     def export(df: pd.DataFrame, filename: str):
