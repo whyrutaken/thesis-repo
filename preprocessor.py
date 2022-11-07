@@ -36,7 +36,7 @@ class Preprocessor:
 
         self.df = self.create_master_df()
         self.df = self.set_df_valid_date(self.df, valid_to)
-        self.export(self.df, "master-df.csv")
+        self.export(self.df, "extracted-data/master-df.csv")
         self.export_raw_data()
 
     @staticmethod
