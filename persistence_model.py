@@ -8,7 +8,8 @@ class PersistenceModel:
     def __init__(self, attribute):
         self.master_df = pd.read_csv("extracted-data/master-df.csv")
         self.master_df = self.set_dates("2020-01-01", "2020-01-05")
-        self.predictions = self.run_model(attribute)
+        self.predictions = self.run_and_predict_model(attribute)
+        self.test_score = self.test_score()
         self.plot()
 
     #master_df["2020-01-01":"2020-01-07"].solar_absolute.plot()
@@ -35,17 +36,21 @@ class PersistenceModel:
     def model_persistence(x):
         return x
 
-    def run_model(self, attribute):
+    def run_and_predict_model(self, attribute):
         lagged_set = self.create_lagged_dataset(attribute)
         self.train_test_split(lagged_set)
         return self.predict()
+
 
     def predict(self):
         predictions = list()
         for x in self.test_X:
             yhat = self.model_persistence(x)
             predictions.append(yhat)
-        test_score = mean_squared_error(self.test_y, predictions)
+        return predictions
+
+    def test_score(self):
+        test_score = mean_squared_error(self.test_y, self.predictions)
         print('Test MSE: %.3f' % test_score)
         return test_score
 
