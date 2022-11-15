@@ -1,11 +1,12 @@
 import pandas as pd
 from typing import List
 
+
 # only reading the data, not changing it
 class Statistics:
 
     def __init__(self):
-        self.df_hourly_res = pd.read_csv("master-df.csv", parse_dates=True)
+        self.df_hourly_res = pd.read_csv("extracted-data/master-df.csv", parse_dates=True)
 
         self.df_daily_max = self.get_daily_max()
         self.df_yearly_total = self.get_yearly_total(

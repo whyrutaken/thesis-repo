@@ -1,7 +1,7 @@
 import statistics as mf
 from preprocessor import Preprocessor
 
-df = Preprocessor(valid_to="2022-02-28").df
+df = Preprocessor(valid_to="2022-02-28").master_df
 
 
 

@@ -20,28 +20,27 @@ class Preprocessor:
     power_imported_id = "Power imported from Grid (Wh)"
     power_exported_id = "Power exported to Grid (Wh)"
 
-    def __init__(self, valid_to: str):
+    def __init__(self, valid_to="2022-02-28"):
         pd.set_option('display.precision', 1)
-        # telemetry data to separate tables
-        df_telemetry = pd.read_csv("initial-data/TelemetryData.csv", names=["id", "timestamp", "value"], parse_dates=True)
-        df_telemetry = df_telemetry.replace(self.json_id_dictionary)  # Replace json ids with dictionary values
 
         self.df_solar, self.df_power_imported, self.df_power_exported = self.create_tables_and_set_index(
-            df_telemetry, [self.solar_id, self.power_imported_id, self.power_exported_id])
+            [self.solar_id, self.power_imported_id, self.power_exported_id])
+        self.df_solar_resampled, self.df_power_imported_resampled, self.df_power_exported_resampled = \
+            self.get_hourly_resolution([self.df_solar, self.df_power_imported, self.df_power_exported])
+        self.master_df = self.create_master_df(valid_to)
 
-        # hourly resolution/resample
-        self.df_solar_resampled = self.get_new_resolution_by_argument(self.df_solar, "H")
-        self.df_power_imported_resampled = self.get_new_resolution_by_argument(self.df_power_imported, 'H')
-        self.df_power_exported_resampled = self.get_new_resolution_by_argument(self.df_power_exported, 'H')
+        self.export([self.master_df, self.df_solar, self.df_power_imported, self.df_power_exported],
+                    ["extracted-data/master-df.csv", "extracted-data/solar-produced.csv",
+                     "extracted-data/power-imported.csv", "extracted-data/power-exported.csv"])
 
-        self.df = self.create_master_df()
-        self.df = self.set_df_valid_date(self.df, valid_to)
-        self.export(self.df, "extracted-data/master-df.csv")
-        self.export_raw_data()
+    def read_telemetry_data(self) -> pd.DataFrame:
+        df_telemetry = pd.read_csv("initial-data/TelemetryData.csv", names=["id", "timestamp", "value"],
+                                   parse_dates=True)
+        return df_telemetry.replace(self.json_id_dictionary)
 
-    @staticmethod
-    def create_tables_and_set_index(df: pd.DataFrame, id_list: list) -> list:
-        list_of_dfs = list()
+    def create_tables_and_set_index(self, id_list: list) -> list:
+        df = self.read_telemetry_data()
+        df_list = list()
         for id_ in id_list:
             table = df.loc[df["id"] == id_]
             table = table.rename(columns={"value": id_})
@@ -49,17 +48,8 @@ class Preprocessor:
             table.index = pd.to_datetime(table.index)  # set index to DateTimeIndex
             table = table.reindex(index=table.index[::-1])  # reverse df
             del table["id"]
-            list_of_dfs.append(table)
-        return list_of_dfs
-
-    @staticmethod
-    def get_new_resolution_by_argument(df: pd.DataFrame, resolution: str) \
-            -> pd.DataFrame:
-        return df.resample(resolution).max().fillna(value=0)
-
-    @staticmethod
-    def set_df_valid_date(df: pd.DataFrame, date: str) -> pd.DataFrame:
-        return df[:date]  # eliminate rows after 2022-03-01
+            df_list.append(table)
+        return df_list
 
     @staticmethod
     def get_abs_value_from_daily_acc(df: pd.DataFrame, old_column: str, new_column: str) \
@@ -77,17 +67,17 @@ class Preprocessor:
         return df.fillna(0)
 
     @staticmethod
-    def calculate_demand(imported: float, exported: float, solar: float) -> float:
-        return imported + solar - exported
+    def get_new_resolution_by_argument(df: pd.DataFrame, resolution: str) \
+            -> pd.DataFrame:
+        return df.resample(resolution).max().fillna(value=0)
 
-    # TODO: instead of deleting completely, you could inject the value from an hour before
-    @staticmethod
-    def del_lines(df: pd.DataFrame, list_of_dates: list) -> pd.DataFrame:
-        for date in list_of_dates:
-            df = df[~(df.index == date)]
-        return df
+    def get_hourly_resolution(self, df_list: list) -> list:
+        return_list = []
+        for df in df_list:
+            return_list.append(self.get_new_resolution_by_argument(df, 'H'))
+        return return_list
 
-    def create_master_df(self):
+    def create_master_df(self, valid_to: str) -> pd.DataFrame:
         SDA = "solar_da"
         IDA = "imported_da"
         EDA = "exported_da"
@@ -111,17 +101,28 @@ class Preprocessor:
         master_df = self.get_abs_value_from_daily_acc(master_df, DDA, DA)
 
         master_df = self.del_lines(master_df, ["2020-01-01 00:00", "2020-03-29 02:00", "2021-03-28 02:00"])
+        master_df = self.set_df_valid_date(master_df, valid_to)
         return master_df
 
-    def export_raw_data(self):
+    @staticmethod
+    def calculate_demand(imported: float, exported: float, solar: float) -> float:
+        return imported + solar - exported
 
-        self.df_solar.to_csv("extracted-data/solar-produced.csv")
-        self.df_power_imported.to_csv("extracted-data/power-imported.csv")
-        self.df_power_exported.to_csv("extracted-data/power-exported.csv")
+    # TODO: instead of deleting completely, you could inject the value from an hour before
+    @staticmethod
+    def del_lines(df: pd.DataFrame, list_of_dates: list) -> pd.DataFrame:
+        for date in list_of_dates:
+            df = df[~(df.index == date)]
+        return df
 
     @staticmethod
-    def export(df: pd.DataFrame, filename: str):
-        df.to_csv(filename, index_label=False)
+    def set_df_valid_date(df: pd.DataFrame, date: str) -> pd.DataFrame:
+        return df[:date]  # eliminate rows after 2022-03-01
+
+    @staticmethod
+    def export(df_list: list, file_list: list):
+        for df, filename in zip(df_list, file_list):
+            df.to_csv(filename, index_label=False)
 
 
 preprocessor = Preprocessor("2022-02-28")
