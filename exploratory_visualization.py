@@ -46,18 +46,18 @@ def plot_year_and_season(df, variable, legend):
     matplotlib.rc('font', **font)
     fig, ax = plt.subplots(nrows=2, ncols=1)
     fig.set_size_inches(20, 8)
-    df["2020-01-01":"2020-02-28"].plot(y=variable, use_index=True, ax=ax[0], legend=False, color="royalblue", alpha=0.9)
-    df["2020-03-01":"2020-05-31"].plot(y=variable, use_index=True, ax=ax[0], legend=False, color="lightpink", alpha=0.9)
-    df["2020-06-01":"2020-08-31"].plot(y=variable, use_index=True, ax=ax[0], legend=False, color="limegreen", alpha=0.9)
-    df["2020-09-01":"2020-11-30"].plot(y=variable, use_index=True, ax=ax[0], legend=False, color="darkorange", alpha=0.9)
-    df["2020-12-01":"2020-12-31"].plot(y=variable, use_index=True, ax=ax[0], legend=False, color="royalblue", alpha=0.9)
+    df["2020-01-01":"2020-02-28"].plot(y=variable, use_index=True, ax=ax[0], legend=False, color="royalblue")
+    df["2020-03-01":"2020-05-31"].plot(y=variable, use_index=True, ax=ax[0], legend=False, color="hotpink")
+    df["2020-06-01":"2020-08-31"].plot(y=variable, use_index=True, ax=ax[0], legend=False, color="seagreen")
+    df["2020-09-01":"2020-11-30"].plot(y=variable, use_index=True, ax=ax[0], legend=False, color="peru")
+    df["2020-12-01":"2020-12-31"].plot(y=variable, use_index=True, ax=ax[0], legend=False, color="royalblue")
 
 
-    df["2021-01-01":"2021-02-28"].plot(y=variable, use_index=True, ax=ax[1], legend=False, color="royalblue", alpha=0.9)
-    df["2021-03-01":"2021-05-31"].plot(y=variable, use_index=True, ax=ax[1], legend=False, color="lightpink", alpha=0.9)
-    df["2021-06-01":"2021-08-31"].plot(y=variable, use_index=True, ax=ax[1], legend=False, color="limegreen", alpha=0.9)
-    df["2021-09-01":"2021-11-30"].plot(y=variable, use_index=True, ax=ax[1], legend=False, color="darkorange", alpha=0.9)
-    df["2021-12-01":"2021-12-31"].plot(y=variable, use_index=True, ax=ax[1], legend=False, color="royalblue", alpha=0.9)
+    df["2021-01-01":"2021-02-28"].plot(y=variable, use_index=True, ax=ax[1], legend=False, color="royalblue")
+    df["2021-03-01":"2021-05-31"].plot(y=variable, use_index=True, ax=ax[1], legend=False, color="hotpink")
+    df["2021-06-01":"2021-08-31"].plot(y=variable, use_index=True, ax=ax[1], legend=False, color="seagreen")
+    df["2021-09-01":"2021-11-30"].plot(y=variable, use_index=True, ax=ax[1], legend=False, color="peru")
+    df["2021-12-01":"2021-12-31"].plot(y=variable, use_index=True, ax=ax[1], legend=False, color="royalblue")
 
     ax[0].set_ylim(bottom=0)
     ax[1].set_ylim(bottom=0)
@@ -109,36 +109,36 @@ def plot_cons_vs_prod_per_year(df):
     matplotlib.rc('font', **font)
     fig, ax = plt.subplots(nrows=2, ncols=1)
     fig.set_size_inches(20, 8)
-    df["2020-01-01":"2020-02-28"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", alpha=0.9)
-    df["2020-01-01":"2020-02-28"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", alpha=0.8)
+    df["2020-01-01":"2020-02-28"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2020-01-01":"2020-02-28"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", kind='area', stacked=False, alpha=0.8)
 
-    df["2020-03-01":"2020-05-31"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", alpha=0.9)
-    df["2020-03-01":"2020-05-31"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", alpha=0.8)
+    df["2020-03-01":"2020-05-31"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2020-03-01":"2020-05-31"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", kind='area', stacked=False, alpha=0.8)
 
-    df["2020-06-01":"2020-08-31"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", alpha=0.9)
-    df["2020-06-01":"2020-08-31"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", alpha=0.8)
+    df["2020-06-01":"2020-08-31"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2020-06-01":"2020-08-31"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", kind='area', stacked=False, alpha=0.8)
 
-    df["2020-09-01":"2020-11-30"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", alpha=0.9)
-    df["2020-09-01":"2020-11-30"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", alpha=0.8)
+    df["2020-09-01":"2020-11-30"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2020-09-01":"2020-11-30"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", kind='area', stacked=False, alpha=0.8)
 
-    df["2020-12-01":"2020-12-31"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", alpha=0.9)
-    df["2020-12-01":"2020-12-31"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", alpha=0.8)
+    df["2020-12-01":"2020-12-31"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2020-12-01":"2020-12-31"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", kind='area', stacked=False, alpha=0.8)
 
 
-    df["2021-01-01":"2021-02-28"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="royalblue", alpha=0.9)
-    df["2021-01-01":"2021-02-28"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", alpha=0.8)
+    df["2021-01-01":"2021-02-28"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2021-01-01":"2021-02-28"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", kind='area', stacked=False, alpha=0.8)
 
-    df["2021-03-01":"2021-05-31"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="royalblue", alpha=0.9)
-    df["2021-03-01":"2021-05-31"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", alpha=0.8)
+    df["2021-03-01":"2021-05-31"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2021-03-01":"2021-05-31"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", kind='area', stacked=False, alpha=0.8)
 
-    df["2021-06-01":"2021-08-31"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="royalblue", alpha=0.9)
-    df["2021-06-01":"2021-08-31"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", alpha=0.8)
+    df["2021-06-01":"2021-08-31"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2021-06-01":"2021-08-31"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", kind='area', stacked=False, alpha=0.8)
 
-    df["2021-09-01":"2021-11-30"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="royalblue", alpha=0.9)
-    df["2021-09-01":"2021-11-30"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", alpha=0.8)
+    df["2021-09-01":"2021-11-30"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2021-09-01":"2021-11-30"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", kind='area', stacked=False, alpha=0.8)
 
-    df["2021-12-01":"2021-12-31"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="royalblue", alpha=0.9)
-    df["2021-12-01":"2021-12-31"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", alpha=0.8)
+    df["2021-12-01":"2021-12-31"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2021-12-01":"2021-12-31"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", kind='area', stacked=False, alpha=0.8)
 
     ax[0].set_ylim(bottom=0)
     ax[1].set_ylim(bottom=0)
@@ -179,17 +179,17 @@ def plot_cons_vs_prod_displaying_weeks_of_seasons(df):
     plt.setp(ax[:], ylabel="Electricity [Wh]")
 
 
-    df["2020-01-13":"2020-01-19"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue")
-    df["2020-01-13":"2020-01-19"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold")
+    df["2020-01-13":"2020-01-19"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2020-01-13":"2020-01-19"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", kind='area', stacked=False)
 
-    df["2020-05-11":"2020-05-17"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="lightpink")
-    df["2020-05-11":"2020-05-17"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold")
+    df["2020-05-11":"2020-05-17"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="mediumvioletred", kind='area', stacked=False)
+    df["2020-05-11":"2020-05-17"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", kind='area', stacked=False)
 
-    df["2020-07-06":"2020-07-12"].plot(y="demand_absolute", use_index=True, ax=ax[2], legend=False, color="limegreen")
-    df["2020-07-06":"2020-07-12"].plot(y="solar_absolute", use_index=True, ax=ax[2], legend=False, color="gold")
+    df["2020-07-06":"2020-07-12"].plot(y="demand_absolute", use_index=True, ax=ax[2], legend=False, color="darkgreen", kind='area', stacked=False)
+    df["2020-07-06":"2020-07-12"].plot(y="solar_absolute", use_index=True, ax=ax[2], legend=False, color="gold", kind='area', stacked=False)
 
-    df["2020-10-12":"2020-10-18"].plot(y="demand_absolute", use_index=True, ax=ax[3], legend=False, color="darkorange")
-    df["2020-10-12":"2020-10-18"].plot(y="solar_absolute", use_index=True, ax=ax[3], legend=False, color="gold")
+    df["2020-10-12":"2020-10-18"].plot(y="demand_absolute", use_index=True, ax=ax[3], legend=False, color="saddlebrown", kind='area', stacked=False)
+    df["2020-10-12":"2020-10-18"].plot(y="solar_absolute", use_index=True, ax=ax[3], legend=False, color="gold", kind='area', stacked=False)
 
 
     ax[0].set_ylim(bottom=0)
@@ -206,6 +206,9 @@ def plot_cons_vs_prod_displaying_weeks_of_seasons(df):
     ax[2].legend(["Power consumption", "PV production"])
     ax[3].legend(["Power consumption", "PV production"])
 
+    for i in range(len(ax)):
+        ax[i].set_xlabel('Days of a week (Monday-Sunday)')
+        ax[i].xaxis.set_label_position('top')
 
     ax[0].title.set_text("Winter")
     ax[1].title.set_text("Spring")
@@ -213,8 +216,9 @@ def plot_cons_vs_prod_displaying_weeks_of_seasons(df):
     ax[3].title.set_text("Autumn")
 
     fig.tight_layout()
-    for ax_ in range(len(ax)):
-        ax[ax_].grid(True, which='both')
+    for i in range(len(ax)):
+        ax[i].grid(True, which='both')
+
     plt.show()
 
 
@@ -224,6 +228,7 @@ def plot_cons_vs_prod_displaying_months_of_seasons(df):
     matplotlib.rc('font', **font)
 
     fig, ax = plt.subplots(nrows=4, ncols=1)
+
     fig.set_size_inches(17, 14)
     ax[0] = plt.subplot2grid((4,3),(0,0),colspan=3)
     ax[1] = plt.subplot2grid((4,3),(1,0),colspan=3)
@@ -232,17 +237,17 @@ def plot_cons_vs_prod_displaying_months_of_seasons(df):
 
     plt.setp(ax[:], ylabel="Electricity [Wh]")
 
-    df["2020-01-01":"2020-01-31"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue")
-    df["2020-01-01":"2020-01-31"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold")
+    df["2020-01-01":"2020-01-31"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2020-01-01":"2020-01-31"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", kind='area', stacked=False)
 
-    df["2020-05-01":"2020-05-31"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="lightpink")
-    df["2020-05-01":"2020-05-31"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold")
+    df["2020-05-01":"2020-05-31"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="mediumvioletred", kind='area', stacked=False)
+    df["2020-05-01":"2020-05-31"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", kind='area', stacked=False)
 
-    df["2020-07-01":"2020-07-31"].plot(y="demand_absolute", use_index=True, ax=ax[2], legend=False, color="limegreen")
-    df["2020-07-01":"2020-07-31"].plot(y="solar_absolute", use_index=True, ax=ax[2], legend=False, color="gold")
+    df["2020-07-01":"2020-07-31"].plot(y="demand_absolute", use_index=True, ax=ax[2], legend=False, color="darkgreen", kind='area', stacked=False)
+    df["2020-07-01":"2020-07-31"].plot(y="solar_absolute", use_index=True, ax=ax[2], legend=False, color="gold", kind='area', stacked=False)
 
-    df["2020-10-01":"2020-10-31"].plot(y="demand_absolute", use_index=True, ax=ax[3], legend=False, color="darkorange")
-    df["2020-10-01":"2020-10-31"].plot(y="solar_absolute", use_index=True, ax=ax[3], legend=False, color="gold")
+    df["2020-10-01":"2020-10-31"].plot(y="demand_absolute", use_index=True, ax=ax[3], legend=False, color="saddlebrown", kind='area', stacked=False)
+    df["2020-10-01":"2020-10-31"].plot(y="solar_absolute", use_index=True, ax=ax[3], legend=False, color="gold", kind='area', stacked=False)
 
 
     ax[0].set_ylim(bottom=0)
@@ -266,7 +271,7 @@ def plot_cons_vs_prod_displaying_months_of_seasons(df):
     ax[0].legend(["Power consumption", "PV production"])
     ax[1].legend(["Power consumption", "PV production"])
     ax[2].legend(["Power consumption", "PV production"])
-    ax[3].legend(["Power consumption", "PV production"])
+    ax[3].legend(["Power consumption", "PV production"],bbox_to_anchor=(0.8, 0.8))
 
 
     ax[0].title.set_text("Winter")
@@ -274,10 +279,60 @@ def plot_cons_vs_prod_displaying_months_of_seasons(df):
     ax[2].title.set_text("Summer")
     ax[3].title.set_text("Autumn")
 
+    for i in range(len(ax)):
+        ax[i].xaxis.set_label_position('top')
+
+    ax[0].set_xlabel('Weeks of January')
+    ax[1].set_xlabel('Weeks of May')
+    ax[2].set_xlabel('Weeks of July')
+    ax[3].set_xlabel('Weeks of October')
+
     fig.tight_layout()
     for ax_ in range(len(ax)):
         ax[ax_].grid(True, which='both')
     plt.show()
+#%%
+
+def plot_self_consumption(df):
+    font = {'size': 15}
+    matplotlib.rc('font', **font)
+    fig, ax = plt.subplots(nrows=1, ncols=4)
+
+    fig.set_size_inches(20, 10)
+    ax[0] = plt.subplot2grid((1, 2), (0, 0), colspan=1)
+    ax[1] = plt.subplot2grid((1, 2), (0, 1), colspan=1)
+
+    plt.setp(ax[:], ylabel="Electricity [Wh]")
+
+    df["2020-06-15"].plot(y="demand_absolute", use_index=True, ax=ax[0], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2020-06-15"].plot(y="solar_absolute", use_index=True, ax=ax[0], legend=False, color="gold", kind='area', stacked=False)
+
+    df["2020-05-09"].plot(y="demand_absolute", use_index=True, ax=ax[1], legend=False, color="royalblue", kind='area', stacked=False)
+    df["2020-05-09"].plot(y="solar_absolute", use_index=True, ax=ax[1], legend=False, color="gold", kind='area', stacked=False)
+
+
+    ax[0].legend(["Power consumption", "PV production"])
+    ax[1].legend(["Power consumption", "PV production"])
+
+ #   ax[0].title.set_text("Weekday")
+ #   ax[1].title.set_text("Weekend")
+
+    ax[0].set_ylim(bottom=0)
+    ax[1].set_ylim(bottom=0)
+    ax[0].set_ylim(top=50000)
+    ax[1].set_ylim(top=50000)
+
+    ax[0].set_xlabel("Time of day")
+    ax[1].set_xlabel("Time of day")
+
+  #  fig.tight_layout()
+    fig.suptitle("Power profiles without and with surplus PV production")
+  #  fig.subplots_adjust(top=1.2)
+    for ax_ in range(len(ax)):
+        ax[ax_].grid(True, which='both')
+
+    plt.show()
+
 
 
 
@@ -289,17 +344,18 @@ master_df.index = pd.DatetimeIndex(index)
 stat = statistics.Statistics()
 master_df = stat.get_season(master_df)
 
+plot_self_consumption(master_df)
 
-plot_cons_vs_prod_per_year(master_df)
-plot_year_and_season(master_df, "solar_absolute", ["Winter PV production", "Spring PV production", "Summer PV production", "Autumn PV production"])
-plot_year_and_season(master_df, "demand_absolute", ["Winter power consumption", "Spring power consumption", "Summer power consumption", "Autumn power consumption"])
+#plot_cons_vs_prod_per_year(master_df)
+#plot_year_and_season(master_df, "solar_absolute", ["Winter PV production", "Spring PV production", "Summer PV production", "Autumn PV production"])
+#plot_year_and_season(master_df, "demand_absolute", ["Winter power consumption", "Spring power consumption", "Summer power consumption", "Autumn power consumption"])
 
-plot_year_and_season(master_df, "imported_absolute", ["Winter imported power", "Spring imported power", "Summer imported power", "Autumn imported power"])
-plot_year_and_season(master_df, "exported_absolute", ["Winter exported power", "Spring exported power", "Summer exported power", "Autumn exported power"])
+#plot_year_and_season(master_df, "imported_absolute", ["Winter imported power", "Spring imported power", "Summer imported power", "Autumn imported power"])
+#plot_year_and_season(master_df, "exported_absolute", ["Winter exported power", "Spring exported power", "Summer exported power", "Autumn exported power"])
 
 
-plot_cons_vs_prod_displaying_months_of_seasons(master_df)
-plot_cons_vs_prod_displaying_weeks_of_seasons(master_df)
+#plot_cons_vs_prod_displaying_months_of_seasons(master_df)
+#plot_cons_vs_prod_displaying_weeks_of_seasons(master_df)
 
 
 plt.show()

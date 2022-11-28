@@ -276,7 +276,7 @@ class Statistics:
                df.loc[solar_index]
 
     @staticmethod
-    def calculate_sold_solar(df: pd.DataFrame, solar_index: str, exported_index: str) -> pd.Series:
+    def calculate_surplus_solar(df: pd.DataFrame, solar_index: str, exported_index: str) -> pd.Series:
         return df.loc[exported_index] / df.loc[solar_index]
 
     def get_metrics(self, df: pd.DataFrame, solar_index: str, exported_index: str,
@@ -284,9 +284,9 @@ class Statistics:
         max_self_sufficiency = self.calculate_max_self_sufficiency(df, solar_index, demand_index)
         self_sufficiency = self.calculate_self_sufficiency(df, solar_index, exported_index, demand_index)
         self_consumption = self.calculate_self_consumption(df, solar_index, exported_index)
-        sold_solar = self.calculate_sold_solar(df, solar_index, exported_index)
+        surplus_solar = self.calculate_surplus_solar(df, solar_index, exported_index)
 
-        df = pd.concat([max_self_sufficiency, self_sufficiency, self_consumption, sold_solar], axis=1,
+        df = pd.concat([max_self_sufficiency, self_sufficiency, self_consumption, surplus_solar], axis=1,
                        ignore_index=True)
         df.columns = ["max_self_sufficiency", "self_sufficiency", "self_consumption", "sold_solar_percentage"]
         return df.transpose()

@@ -15,8 +15,8 @@ class ArimaModel:
 
     def __init__(self, attribute):
         self.df = Preparator(attribute)
-        self.train, self.test = self.df.train_test_split(train_from_date="2020-08-01",
-                                                         test_from_date="2021-01-01 00:00")
+        self.train, self.test = self.df.train_test_split_by_date(self.df.historical_df, train_from_date="2020-08-01",
+                                                                 test_from_date="2021-01-01 00:00")
 
         #      self.multi_forecast(["2021-01-01", "2021-01-02", "2021-01-03"], forecast_steps=24)
 #        pred1 = self.multi_forecast(train_from_date="2020-08-01",
@@ -26,28 +26,27 @@ class ArimaModel:
  #                                                   "2021-01-01 09:00", "2021-01-01 10:00", "2021-01-01 11:00",
  #                                                   "2021-01-01 12:00"], forecast_steps=1)
  #       error1, mean_error1 = Metrics().calculate_errors(Metrics.rmse, pred1, self.test)
-        self.pred2 = self.multi_forecast(train_from_date="2020-08-01",
-                                    forecast_dates=["2021-01-01 00:00", "2021-01-01 03:00", "2021-01-01 06:00",
+        self.pred2 = self.multistep_forecast(train_from_date="2020-08-01",
+                                             forecast_dates=["2021-01-01 00:00", "2021-01-01 03:00", "2021-01-01 06:00",
                                                     "2021-01-01 09:00", "2021-01-01 12:00", "2021-01-01 15:00",
                                                     "2021-01-01 18:00", "2021-01-01 21:00", "2021-01-02 00:00",
                                                     ], forecast_steps=3)
         self.error2, self.mean_error2 = Metrics().calculate_errors(Metrics.rmse, self.pred2, self.test)
 
-    def fit_and_predict_model(self, df, train_from_date, test_from_date, forecast_steps):
-        train, test = df.train_test_split(train_from_date, test_from_date)
+    def fit_and_predict(self, df, train_from_date, test_from_date, forecast_steps):
+        train, test = df.train_test_split_by_date(train_from_date, test_from_date)
         model = ARIMA(train, order=(29, 1, 1))
-        fitted_model = model.fit()
+        model = model.fit()
         #     self.plot_model_details(fitted_model)
-        prediction = self.format_prediction(fitted_model.forecast(forecast_steps), test)
-        return prediction
+        return self.format_prediction(model.forecast(forecast_steps), test)
 
-    def multi_forecast(self, train_from_date, forecast_dates, forecast_steps):
-        prediction = self.fit_and_predict_model(self.df, train_from_date=train_from_date, test_from_date=forecast_dates[0],
-                                                forecast_steps=forecast_steps)
+    def multistep_forecast(self, train_from_date, forecast_dates, forecast_steps):
+        prediction = self.fit_and_predict(self.df, train_from_date=train_from_date, test_from_date=forecast_dates[0],
+                                          forecast_steps=forecast_steps)
         for number in range(len(forecast_dates) - 1):
             prediction = prediction.append(
-                self.fit_and_predict_model(self.df, train_from_date, forecast_dates[number + 1],
-                                           forecast_steps=forecast_steps))
+                self.fit_and_predict(self.df, train_from_date, forecast_dates[number + 1],
+                                     forecast_steps=forecast_steps))
         self.print_forecast(prediction)
         return prediction
 

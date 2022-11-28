@@ -100,7 +100,7 @@ class Preprocessor:
         master_df = self.get_abs_value_from_daily_acc(master_df, EDA, EA)
         master_df = self.get_abs_value_from_daily_acc(master_df, DDA, DA)
 
-        master_df = self.del_lines(master_df, ["2020-01-01 00:00", "2020-03-29 02:00", "2021-03-28 02:00"])
+     #   master_df = self.del_lines(master_df, ["2020-01-01 00:00", "2020-03-29 02:00", "2021-03-28 02:00"])
         master_df = self.set_df_valid_date(master_df, valid_to)
         return master_df
 
