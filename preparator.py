@@ -74,8 +74,8 @@ class Preparator:
         # for arimamodel these were pd.series
         train = pd.DataFrame(df[train_from_date:test_from_date], index=df[train_from_date:test_from_date].index)
         test = pd.DataFrame(df[test_from_date:], index=df[test_from_date:].index)
-        train.index = pd.DatetimeIndex(train.index)
-        test.index = pd.DatetimeIndex(test.index)
+        train.index = pd.DatetimeIndex(train.index, freq=train.index.inferred_freq)
+        test.index = pd.DatetimeIndex(test.index, freq=train.index.inferred_freq) 
         return train, test
 
 

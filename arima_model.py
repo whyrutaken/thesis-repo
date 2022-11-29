@@ -30,8 +30,8 @@ class ArimaModel:
         self.preparator = Preparator(attribute, test_from_date)
         self.train, self.test = self.preparator.train_test_split_by_date(self.preparator.historical_df, test_from_date=test_from_date)
 
-        self.multi_pred = self.multistep_forecast(test_from_date, test_to_date, forecast_steps=forecast_steps)
-        self.error2, self.mean_error2 = Metrics().calculate_errors(Metrics.rmse, self.multi_pred, self.test)
+        self.prediction = self.multistep_forecast(test_from_date, test_to_date, forecast_steps=forecast_steps)
+        self.error, self.mean_error = Metrics().calculate_errors(Metrics.rmse, self.prediction, self.test)
 
     def fit_and_predict(self, df, test_from_date, forecast_steps):
         train, test = df.train_test_split_by_date(df.historical_df, test_from_date=test_from_date)
@@ -66,6 +66,6 @@ class ArimaModel:
 
 
 
-model = ArimaModel("solar_absolute", test_from_date="2020-02-01 00:00", test_to_date="2020-02-01 10:00", forecast_steps=5)
-print_forecast(model.train, model.test, model.multi_pred)
+#model = ArimaModel("solar_absolute", test_from_date="2020-02-01 00:00", test_to_date="2020-02-01 10:00", forecast_steps=5)
+#print_forecast(model.train, model.test, model.multi_pred)
 
