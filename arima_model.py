@@ -11,44 +11,44 @@ from preparator import Preparator
 from metric_calculator import Metrics
 
 
+def print_forecast(train, test, prediction):
+    plt.figure(figsize=(15, 5), dpi=100)
+    plt.locator_params(axis='x', nbins=5)
+    plt.plot(train[len(train) - 48:], label='training')
+    plt.plot(test[:72], label='actual')
+    plt.plot(prediction, label='forecast')
+
+    plt.title('ARIMA: Forecast vs Actual')
+    plt.legend(loc='upper right', fontsize=8)
+    plt.xlabel('Time')
+    plt.ylabel('PV production [Wh]')
+    plt.show()
+
 class ArimaModel:
 
-    def __init__(self, attribute):
-        self.df = Preparator(attribute)
-        self.train, self.test = self.df.train_test_split_by_date(self.df.historical_df, train_from_date="2020-08-01",
-                                                                 test_from_date="2021-01-01 00:00")
+    def __init__(self, attribute, test_from_date, test_to_date, forecast_steps):
+        self.preparator = Preparator(attribute, test_from_date)
+        self.train, self.test = self.preparator.train_test_split_by_date(self.preparator.historical_df, test_from_date=test_from_date)
 
-        #      self.multi_forecast(["2021-01-01", "2021-01-02", "2021-01-03"], forecast_steps=24)
-#        pred1 = self.multi_forecast(train_from_date="2020-08-01",
-#                                    forecast_dates=["2021-01-01 00:00", "2021-01-01 01:00", "2021-01-01 02:00",
- #                                                   "2021-01-01 03:00", "2021-01-01 04:00", "2021-01-01 05:00",
- #                                                   "2021-01-01 06:00", "2021-01-01 07:00", "2021-01-01 08:00",
- #                                                   "2021-01-01 09:00", "2021-01-01 10:00", "2021-01-01 11:00",
- #                                                   "2021-01-01 12:00"], forecast_steps=1)
- #       error1, mean_error1 = Metrics().calculate_errors(Metrics.rmse, pred1, self.test)
-        self.pred2 = self.multistep_forecast(train_from_date="2020-08-01",
-                                             forecast_dates=["2021-01-01 00:00", "2021-01-01 03:00", "2021-01-01 06:00",
-                                                    "2021-01-01 09:00", "2021-01-01 12:00", "2021-01-01 15:00",
-                                                    "2021-01-01 18:00", "2021-01-01 21:00", "2021-01-02 00:00",
-                                                    ], forecast_steps=3)
-        self.error2, self.mean_error2 = Metrics().calculate_errors(Metrics.rmse, self.pred2, self.test)
+        self.multi_pred = self.multistep_forecast(test_from_date, test_to_date, forecast_steps=forecast_steps)
+        self.error2, self.mean_error2 = Metrics().calculate_errors(Metrics.rmse, self.multi_pred, self.test)
 
-    def fit_and_predict(self, df, train_from_date, test_from_date, forecast_steps):
-        train, test = df.train_test_split_by_date(train_from_date, test_from_date)
+    def fit_and_predict(self, df, test_from_date, forecast_steps):
+        train, test = df.train_test_split_by_date(df.historical_df, test_from_date=test_from_date)
         model = ARIMA(train, order=(29, 1, 1))
         model = model.fit()
         #     self.plot_model_details(fitted_model)
-        return self.format_prediction(model.forecast(forecast_steps), test)
-
-    def multistep_forecast(self, train_from_date, forecast_dates, forecast_steps):
-        prediction = self.fit_and_predict(self.df, train_from_date=train_from_date, test_from_date=forecast_dates[0],
-                                          forecast_steps=forecast_steps)
-        for number in range(len(forecast_dates) - 1):
-            prediction = prediction.append(
-                self.fit_and_predict(self.df, train_from_date, forecast_dates[number + 1],
-                                     forecast_steps=forecast_steps))
-        self.print_forecast(prediction)
+        prediction = model.forecast(forecast_steps)
+        print("fit_and_pred")
         return prediction
+
+    def multistep_forecast(self, test_from_date, test_to_date, forecast_steps):
+        date_range = pd.date_range(test_from_date, test_to_date, freq=str(forecast_steps) + "H")
+        prediction = []
+        for date in date_range:
+            prediction = np.append(prediction,
+                self.fit_and_predict(self.preparator, test_from_date=date, forecast_steps=forecast_steps))
+        return self.format_prediction(prediction, self.test)
 
     @staticmethod
     def format_prediction(prediction, test):
@@ -63,19 +63,9 @@ class ArimaModel:
         fitted_model.plot_diagnostics()
         plt.show()
 
-    def print_forecast(self, prediction):
-        plt.figure(figsize=(15, 5), dpi=100)
-        plt.locator_params(axis='x', nbins=5)
-        plt.plot(self.train[len(self.train) - 48:], label='training')
-        plt.plot(self.test[:len(prediction) + 24], label='actual')
-        plt.plot(prediction, label='forecast')
-
-        plt.title('ARIMA: Forecast vs Actual')
-        plt.legend(loc='upper right', fontsize=8)
-        plt.xlabel('Time')
-        plt.ylabel('PV production [Wh]')
-        plt.show()
 
 
-arima = ArimaModel("solar_absolute")
+
+model = ArimaModel("solar_absolute", test_from_date="2020-02-01 00:00", test_to_date="2020-02-01 10:00", forecast_steps=5)
+print_forecast(model.train, model.test, model.multi_pred)
 

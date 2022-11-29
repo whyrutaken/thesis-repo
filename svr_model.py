@@ -1,19 +1,19 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
 from preparator import Preparator
-from sklearn.model_selection import train_test_split
 from sklearn.svm import SVR
 import numpy as np
 import datetime
+import array
 
-def print_forecast(train, test, prediction):
+def print_forecast(train, test, prediction, pred2, pred3):
     plt.figure(figsize=(15, 5), dpi=100)
     plt.locator_params(axis='x', nbins=5)
     plt.plot(train[len(train) - 48:], label='training')
-    plt.plot(test[:168], label='actual')
-    plt.plot(prediction, label='forecast')
-
+    plt.plot(test[:240], label='actual')
+    plt.plot(prediction, label='forecast 48h')
+#    plt.plot(pred2, label='forecast 24h')
+#    plt.plot(pred3, label='forecast 48h')
     plt.title('Forecast vs Actual')
     plt.legend(loc='upper right', fontsize=8)
     plt.xlabel('Time')
@@ -22,32 +22,34 @@ def print_forecast(train, test, prediction):
 
 
 class SVRModel:
-    def __init__(self, attribute):
+    def __init__(self, attribute, test_from_date, test_to_date, horizon):
 
 
-        self.preparator = Preparator(attribute)
-     #   self.prediction = self.fit_and_predict(test_from_date="2022-01-01 00:00", horizon=24)
-     #   self.prediction = self.multistep_forecast(test_from_date="2021-01-01 02:00")
-        self.pred = self.fit_and_predict_all()
+        self.preparator = Preparator(attribute, test_from_date)
+      #  self.prediction = self.fit_and_predict(test_from_date="2022-01-01 00:00")
+   #     self.prediction1 = self.multistep_forecast(test_from_date="2022-01-01 00:00", test_to_date="2022-01-04 02:00", horizon=12)
+   #     self.prediction2 = self.multistep_forecast(test_from_date="2022-01-01 00:00", test_to_date="2022-01-04 02:00", horizon=24)
+        self.prediction3 = self.multistep_forecast(test_from_date=test_from_date, test_to_date=test_to_date, horizon=horizon)
 
-    def fit_and_predict(self, test_from_date, horizon=1):
-        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date)
+     #   self.pred = self.fit_and_predict_all(test_from_date="2022-01-01 00:00")
+
+    def fit_and_predict(self, test_from_date, horizon):
+        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date=test_from_date)
         model = SVR()
-        model = model.fit(x_train[:-2], y_train.ravel())
-        test = x_test[0].reshape(1, 9)
-        prediction = model.predict(test)
+        model = model.fit(x_train, y_train.ravel())
+        prediction = model.predict(x_test[:horizon])
         inverse_scaled_prediction = self.preparator.inverse_scaler(prediction)
-        return self.format_prediction(inverse_scaled_prediction[0][0])
+        return inverse_scaled_prediction.ravel()
 
-    def fit_and_predict_all(self):
-        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date="2022-01-01 00:00")
-        model = SVR(kernel="rbf")
-        model = model.fit(x_train[:-2], y_train.ravel())
-       # test = x_test[test_index].reshape(1, 6)
-        prediction = model.predict(x_test[:168])
+    def fit_and_predict_all(self, test_from_date):
+        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date=test_from_date)
+        model = SVR()
+        model = model.fit(x_train, y_train.ravel())
+        prediction = model.predict(x_test[:240])
         inv_pred = list()
         for pred in prediction:
             inv_pred.append(self.preparator.inverse_scaler(pred)[0])
+        print(model.score(x_test[:240], y_test[:240]))
         return self.format_prediction(inv_pred)
 
     def format_prediction(self, prediction):
@@ -56,15 +58,15 @@ class SVRModel:
         prediction.index = pd.DatetimeIndex(prediction.index)
         return prediction
 
-    def multistep_forecast(self, test_from_date):
-        prediction = list()
-        for size in train_size:
-            prediction.append(
-                self.fit_and_predict(size))
+    def multistep_forecast(self, test_from_date, test_to_date, horizon=1):
+        date_range = pd.date_range(test_from_date, test_to_date, freq=str(horizon) + "H")
+        prediction = []
+        for date in date_range:
+            prediction = np.append(prediction, self.fit_and_predict(test_from_date=date, horizon=horizon))
         return self.format_prediction(prediction)
 
 
-model = SVRModel("solar_absolute")
+model = SVRModel("solar_absolute", test_from_date="2021-03-01 00:00", test_to_date="2021-03-04 00:00", horizon=24)
 
 # %%
 
@@ -74,5 +76,5 @@ model = SVRModel("solar_absolute")
 
 # scaled_prediction = format_prediction(scaled_prediction[0][:1200], preparator.y_test)
 
-print_forecast(model.preparator.y_train, model.preparator.y_test, model.pred)
+print_forecast(model.preparator.y_train, model.preparator.y_test, model.prediction3,"","")
 # print(model.model.score(x_test, y_test))
