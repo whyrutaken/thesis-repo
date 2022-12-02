@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from preparator import Preparator
 from sklearn.svm import SVR
 import numpy as np
-from metric_calculator import Metrics
+from error_metric_calculator import Metrics
 
 
 
@@ -27,7 +27,7 @@ class SVRModel:
         self.preparator = Preparator(attribute, test_from_date)
         self.y_train, self.y_test = self.preparator.y_train, self.preparator.y_test
         self.prediction = self.multistep_forecast(test_from_date=test_from_date, test_to_date=test_to_date, horizon=horizon)
-        self.error, self.mean_error = Metrics().calculate_errors(Metrics.rmse, self.prediction, self.preparator.y_test)
+        self.individual_error_scores, self.overall_error_scores = Metrics().calculate_errors(self.preparator.y_test, self.prediction)
 
       #  self.prediction = self.fit_and_predict(test_from_date="2022-01-01 00:00")
      #   self.pred = self.fit_and_predict_all(test_from_date="2022-01-01 00:00")

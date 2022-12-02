@@ -102,6 +102,8 @@ class Preprocessor:
 
      #   master_df = self.del_lines(master_df, ["2020-01-01 00:00", "2020-03-29 02:00", "2021-03-28 02:00"])
         master_df = self.set_df_valid_date(master_df, valid_to)
+        master_df.index = pd.to_datetime(master_df.index)
+        master_df = self.fill_missing_values(master_df, ["2020-03-29 02:00", "2021-03-28 02:00"])
         return master_df
 
     @staticmethod
@@ -113,6 +115,16 @@ class Preprocessor:
     def del_lines(df: pd.DataFrame, list_of_dates: list) -> pd.DataFrame:
         for date in list_of_dates:
             df = df[~(df.index == date)]
+        return df
+
+
+    # copy the value from the same time the day before (for absolute values)
+    # zero for daily aggregated values
+    def fill_missing_values(self, df: pd.DataFrame, timestamps: list) -> pd.DataFrame:
+        for timestamp in timestamps:
+            observation_index = df.index.get_loc(timestamp)
+            df.loc[timestamp, "solar_da":"demand_da"] = 0
+            df.loc[timestamp, "solar_absolute":"demand_absolute"] = df.iloc[(observation_index-24)]
         return df
 
     @staticmethod

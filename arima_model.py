@@ -8,7 +8,7 @@ from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 import numpy as np
 from preparator import Preparator
-from metric_calculator import Metrics
+from error_metric_calculator import Metrics
 
 
 def print_forecast(train, test, prediction):

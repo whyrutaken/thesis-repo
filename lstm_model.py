@@ -5,9 +5,18 @@ from keras.layers import LSTM, Dense
 import numpy as np
 from preparator import Preparator
 import matplotlib.pyplot as plt
+from error_metric_calculator import Metrics
+import printer
 
 class LSTMModel:
     def __init__(self, attribute, test_from_date, test_to_date, horizon):
+
+
+        batch_size = 168
+        epochs = 10
+
+
+
         self.preparator = Preparator(attribute, test_from_date)
         self.x_train, self.x_test, self.y_train, self.y_test = self.preparator.get_scaled_data(test_from_date)
 
@@ -16,13 +25,15 @@ class LSTMModel:
         self.x_train_w, self.y_train_w = self.prepare_sliding_windows(self.x_train, self.y_train, horizon)
         self.x_test_w, self.y_test_w = self.prepare_sliding_windows(self.x_test, self.y_test, horizon)
 
-    #    self.x_train = x_train.reshape((x_train.shape[0], 1, x_train.shape[1]))
-    #    self.x_test = self.x_test.reshape((self.x_test.shape[0], 1, self.x_test.shape[1]))
-        self.pred = self.fit_and_predict(test_from_date, self.x_train_w, self.y_train_w, self.x_test_w, self.y_test_w, horizon)
+
+        self.pred = self.fit_and_predict(test_from_date, self.x_train_w, self.y_train_w, self.x_test_w, self.y_test_w, batch_size, epochs)
         self.pred = self.format_prediction(self.pred, horizon)
+        self.individual_scores, self.overall_scores = Metrics().calculate_errors(self.preparator.y_test, self.pred[horizon:])
+        printer.print_single_forecast(self.preparator.y_train, self.preparator.y_test, self.pred)
+
     #    self.prediction = self.multistep_forecast(test_from_date=test_from_date, test_to_date=test_to_date, x_train=self.x_train, y_train=self.y_train, x_test=self.x_test, y_test=self.y_test, horizon=horizon)
 
-    def prepare_sliding_windows(self, feature, target, sliding_window=24):
+    def prepare_sliding_windows(self, feature, target, sliding_window):
         X, Y = [], []
         for i in range(len(feature) - sliding_window):
             X.append(feature[i:(i + sliding_window), :])  # features
@@ -44,9 +55,9 @@ class LSTMModel:
         model.summary()
         return model
 
-    def fit_and_predict(self, test_from_date, x_train, y_train, x_test, y_test, horizon):
+    def fit_and_predict(self, test_from_date, x_train, y_train, x_test, y_test, batch_size, epochs):
         model = self.build_model(x_train.shape[1], x_train.shape[2])
-        history = model.fit(x_train, y_train, epochs=10, batch_size=168, verbose=2, shuffle=False)
+        history = model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, verbose=1, shuffle=False, validation_split=0.1, validation_batch_size=batch_size)
         self.plot(history)
         prediction = model.predict(x_test[:168][:][:])
         inverse_scaled_prediction = self.preparator.inverse_scaler(prediction)
@@ -68,9 +79,10 @@ class LSTMModel:
 
     def plot(self, history):
         plt.plot(history.history['loss'], label='train')
-     #   plt.plot(history.history['val_loss'], label='test')
+        plt.plot(history.history['val_loss'], label='test')
         plt.legend()
         plt.show()
 
 
-#lstm = LSTMModel("solar_absolute", test_from_date="2021-01-01 00:00", test_to_date="2021-01-04 00:00", horizon=24)
+lstm = LSTMModel("solar_absolute", test_from_date="2021-06-10 00:00", test_to_date="2021-06-12 00:00", horizon=24)
+
