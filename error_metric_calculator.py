@@ -6,13 +6,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 
 class Metrics:
-    @staticmethod
-    def rmse_(actual, forecast):
-        return np.mean((forecast[0] - actual[0]) ** 2) ** .5
-
-    @staticmethod
-    def mae_(actual, forecast):
-        return np.mean(np.abs(forecast[0] - actual[0]))
+    # def __init__(self, prediction, actual):
 
     @staticmethod
     def rmse(actual, forecast):
@@ -26,17 +20,25 @@ class Metrics:
     def r2(actual, forecast):
         return r2_score(actual, forecast)
 
+    @staticmethod
+    def rmspe(actual, forecast):
+        epsilon = 1e-10
+        return (np.sqrt(np.mean(np.square((actual - forecast) / (actual + epsilon))))) * 100
+
+
     def individual_scores(self, actual, forecast):
         rmse_scores = []
         mae_scores = []
-        for i in range(len(forecast) - 1):
+        for i in range(len(forecast)):
             rmse_scores.append(self.rmse(actual.iloc[i], forecast.iloc[i]))
             mae_scores.append(self.mae(actual.iloc[i], forecast.iloc[i]))
         df = pd.DataFrame(rmse_scores, columns=["rmse"])
         df["mae"] = mae_scores
         return df
 
-    # Errors of all outputs are averaged with uniform weight.
+        # Errors of all outputs are averaged with uniform weight.
+
+
     def overall_scores(self, actual, forecast):
         rmse_score = self.rmse(actual, forecast)
         mae_score = self.mae(actual, forecast)

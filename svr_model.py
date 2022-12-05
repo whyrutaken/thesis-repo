@@ -4,22 +4,9 @@ from preparator import Preparator
 from sklearn.svm import SVR
 import numpy as np
 from error_metric_calculator import Metrics
+import printer
 
 
-
-def print_forecast(train, test, prediction, pred2, pred3):
-    plt.figure(figsize=(15, 5), dpi=100)
-    plt.locator_params(axis='x', nbins=5)
-    plt.plot(train[len(train) - 48:], label='training')
-    plt.plot(test[:240], label='actual')
-    plt.plot(prediction, label='forecast 48h')
-    plt.plot(pred2, label='forecast 24h')
-#    plt.plot(pred3, label='forecast 48h')
-    plt.title('Forecast vs Actual')
-    plt.legend(loc='upper right', fontsize=8)
-    plt.xlabel('Time')
-    plt.ylabel('PV production [Wh]')
-    plt.show()
 
 
 class SVRModel:
@@ -28,10 +15,11 @@ class SVRModel:
         self.y_train, self.y_test = self.preparator.y_train, self.preparator.y_test
         self.prediction = self.multistep_forecast(test_from_date=test_from_date, test_to_date=test_to_date, horizon=horizon)
         self.individual_error_scores, self.overall_error_scores = Metrics().calculate_errors(self.preparator.y_test, self.prediction)
+        self.individual_error_scores.index = self.prediction.index
+        self.std_error = self.individual_error_scores.std()
 
-      #  self.prediction = self.fit_and_predict(test_from_date="2022-01-01 00:00")
-     #   self.pred = self.fit_and_predict_all(test_from_date="2022-01-01 00:00")
-
+        printer.print_error(self.individual_error_scores)
+        printer.print_single_forecast(self.y_train, self.y_test, self.prediction)
 
 
     def fit_and_predict(self, test_from_date, horizon):
@@ -42,16 +30,6 @@ class SVRModel:
         inverse_scaled_prediction = self.preparator.inverse_scaler(prediction)
         return inverse_scaled_prediction.ravel()
 
-    def fit_and_predict_all(self, test_from_date):
-        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date=test_from_date)
-        model = SVR()
-        model = model.fit(x_train, y_train.ravel())
-        prediction = model.predict(x_test[:240])
-        inv_pred = list()
-        for pred in prediction:
-            inv_pred.append(self.preparator.inverse_scaler(pred)[0])
-        print(model.score(x_test[:240], y_test[:240]))
-        return self.format_prediction(inv_pred)
 
     def format_prediction(self, prediction):
         prediction = pd.Series(prediction)
@@ -67,9 +45,8 @@ class SVRModel:
         return self.format_prediction(prediction)
 
 
-#model = SVRModel("solar_absolute", test_from_date="2021-01-01 00:00", test_to_date="2021-01-04 00:00", horizon=24)
+model = SVRModel("solar_absolute", test_from_date="2020-06-01 00:00", test_to_date="2020-06-02 00:00", horizon=3)
 
-# %%
 
 
 # %%

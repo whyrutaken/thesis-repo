@@ -17,6 +17,9 @@ if __name__ == '__main__':
 
     svr = SVRModel(attribute, test_from_date, test_to_date, horizon)
 
+
+
+#%%
 #    arima = ArimaModel(attribute, test_from_date, test_to_date, horizon)
     lstm = LSTMModel(attribute, test_from_date, test_to_date, horizon)
  #   printer.print_single_forecast(lstm.preparator.y_train, lstm.preparator.y_test, lstm.pred)

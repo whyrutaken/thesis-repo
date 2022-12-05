@@ -40,3 +40,12 @@ def print_multi_forecast(train, test, pred1, pred2, pred3):
     ax.set(xlabel="Time", ylabel="PV production [Wh]", title="Forecast vs Actual")
     ax.grid(True, which='both')
     plt.show()
+
+def print_error(error):
+    fig, ax = plt.subplots(figsize=(15, 5), dpi=100)
+    plt.locator_params(axis='x', nbins=5)
+    ax.plot(error, label='error')
+
+    ax.set(xlabel="Time", ylabel="RMSE [Wh]", title="Error plot")
+    ax.grid(True, which='both')
+    plt.show()

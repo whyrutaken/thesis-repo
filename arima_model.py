@@ -9,20 +9,8 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 import numpy as np
 from preparator import Preparator
 from error_metric_calculator import Metrics
+import printer
 
-
-def print_forecast(train, test, prediction):
-    plt.figure(figsize=(15, 5), dpi=100)
-    plt.locator_params(axis='x', nbins=5)
-    plt.plot(train[len(train) - 48:], label='training')
-    plt.plot(test[:72], label='actual')
-    plt.plot(prediction, label='forecast')
-
-    plt.title('ARIMA: Forecast vs Actual')
-    plt.legend(loc='upper right', fontsize=8)
-    plt.xlabel('Time')
-    plt.ylabel('PV production [Wh]')
-    plt.show()
 
 class ArimaModel:
 
@@ -66,6 +54,6 @@ class ArimaModel:
 
 
 
-model = ArimaModel("solar_absolute", test_from_date="2020-05-01 00:00", test_to_date="2020-05-03 10:00", horizon=5)
-print_forecast(model.train, model.test, model.prediction)
+model = ArimaModel("solar_absolute", test_from_date="2020-05-01 00:00", test_to_date="2020-05-01 10:00", horizon=5)
+printer.print_single_forecast(model.train, model.test, model.prediction)
 
