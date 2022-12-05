@@ -20,13 +20,7 @@ class LSTMModel:
         self.preparator = Preparator(attribute, test_from_date)
         self.x_train, self.x_test, self.y_train, self.y_test = self.preparator.get_scaled_data(test_from_date)
 
-
-
-        self.x_train_w, self.y_train_w = self.prepare_sliding_windows(self.x_train, self.y_train, horizon)
-        self.x_test_w, self.y_test_w = self.prepare_sliding_windows(self.x_test, self.y_test, horizon)
-
-
-        self.pred = self.fit_and_predict(test_from_date, self.x_train_w, self.y_train_w, self.x_test_w, self.y_test_w, batch_size, epochs)
+        self.pred = self.fit_and_predict(test_from_date, self.x_train, self.y_train, self.x_test, self.y_test, horizon, batch_size, epochs)
         self.pred = self.format_prediction(self.pred, horizon)
         self.individual_scores, self.overall_scores = Metrics().calculate_errors(self.preparator.y_test, self.pred[horizon:])
         printer.print_single_forecast(self.preparator.y_train, self.preparator.y_test, self.pred)
@@ -55,20 +49,23 @@ class LSTMModel:
         model.summary()
         return model
 
-    def fit_and_predict(self, test_from_date, x_train, y_train, x_test, y_test, batch_size, epochs):
+    def fit_and_predict(self, test_from_date, x_train, y_train, x_test, y_test, horizon, batch_size, epochs):
+        x_train, y_train = self.prepare_sliding_windows(x_train, y_train, horizon)
+        x_test, y_test = self.prepare_sliding_windows(x_test, y_test, horizon)
+
         model = self.build_model(x_train.shape[1], x_train.shape[2])
         history = model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, verbose=1, shuffle=False, validation_split=0.1, validation_batch_size=batch_size)
         self.plot(history)
-        prediction = model.predict(x_test[:168][:][:])
+        prediction = model.predict(x_test)
         inverse_scaled_prediction = self.preparator.inverse_scaler(prediction)
         return inverse_scaled_prediction.ravel()
 
-    def multistep_forecast(self, test_from_date, test_to_date, x_train, y_train, x_test, y_test, horizon=24):
+    def multistep_forecast(self, test_from_date, test_to_date, x_train, y_train, x_test, y_test, horizon):
         date_range = pd.date_range(test_from_date, test_to_date, freq=str(horizon) + "H")
         prediction = []
         for date in date_range:
             prediction = np.append(prediction, self.fit_and_predict(date, x_train, y_train, x_test, y_test, horizon))
-        return self.format_prediction(prediction)
+        return self.format_prediction(prediction, horizon)
 
     def format_prediction(self, prediction, horizon):
         prediction = pd.Series(prediction)
@@ -84,5 +81,5 @@ class LSTMModel:
         plt.show()
 
 
-lstm = LSTMModel("solar_absolute", test_from_date="2021-06-10 00:00", test_to_date="2021-06-12 00:00", horizon=24)
+#lstm = LSTMModel("demand_absolute", test_from_date="2021-06-10 00:00", test_to_date="2021-06-24 00:00", horizon=168)
 

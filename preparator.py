@@ -70,7 +70,7 @@ class Preparator:
         return train, test
 
     @staticmethod
-    def train_test_split_by_date(df, train_from_date="2020-01-01 00:00", test_from_date="2022-01-01 00:00"):
+    def train_test_split_by_date(df, test_from_date, train_from_date="2020-01-01 00:00"):
         # for arimamodel these were pd.series
         train = pd.DataFrame(df[train_from_date:test_from_date], index=df[train_from_date:test_from_date].index)
         test = pd.DataFrame(df[test_from_date:], index=df[test_from_date:].index)

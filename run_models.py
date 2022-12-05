@@ -8,11 +8,17 @@ import matplotlib.pyplot as plt
 
 # %%
 if __name__ == '__main__':
-    svr = SVRModel("solar_absolute", test_from_date="2020-06-10 00:00", test_to_date="2020-06-12 00:00", horizon=24)
+    attribute = "solar_absolute"
+    test_from_date = "2020-07-10 00:00"
+    test_to_date = "2020-07-12 00:00"
+    horizon = 24
 
-#    arima = ArimaModel("solar_absolute", test_from_date="2020-06-10 00:00", test_to_date="2020-06-11 00:00",
- #                      forecast_steps=24)
-    lstm = LSTMModel("solar_absolute", test_from_date="2020-06-10 00:00", test_to_date="2020-06-12 00:00", horizon=24)
+
+
+    svr = SVRModel(attribute, test_from_date, test_to_date, horizon)
+
+#    arima = ArimaModel(attribute, test_from_date, test_to_date, horizon)
+    lstm = LSTMModel(attribute, test_from_date, test_to_date, horizon)
  #   printer.print_single_forecast(lstm.preparator.y_train, lstm.preparator.y_test, lstm.pred)
     printer.print_double_forecast(lstm.preparator.y_train, lstm.preparator.y_test, lstm.pred, svr.prediction)
 

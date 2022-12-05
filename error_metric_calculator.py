@@ -16,7 +16,7 @@ class Metrics:
 
     @staticmethod
     def rmse(actual, forecast):
-        return mean_squared_error(actual, forecast, squared=False)
+        return sqrt(mean_squared_error(actual, forecast))
 
     @staticmethod
     def mae(actual, forecast):

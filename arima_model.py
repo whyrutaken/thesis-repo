@@ -26,28 +26,28 @@ def print_forecast(train, test, prediction):
 
 class ArimaModel:
 
-    def __init__(self, attribute, test_from_date, test_to_date, forecast_steps):
+    def __init__(self, attribute, test_from_date, test_to_date, horizon):
         self.preparator = Preparator(attribute, test_from_date)
         self.train, self.test = self.preparator.train_test_split_by_date(self.preparator.historical_df, test_from_date=test_from_date)
 
-        self.prediction = self.multistep_forecast(test_from_date, test_to_date, forecast_steps=forecast_steps)
-        self.error, self.mean_error = Metrics().calculate_errors(Metrics.rmse, self.prediction, self.test)
+        self.prediction = self.multistep_forecast(test_from_date, test_to_date, horizon=horizon)
+        self.individual_scores, self.overall_scores = Metrics().calculate_errors(self.test, self.prediction)
 
-    def fit_and_predict(self, df, test_from_date, forecast_steps):
+    def fit_and_predict(self, df, test_from_date, horizon):
         train, test = df.train_test_split_by_date(df.historical_df, test_from_date=test_from_date)
         model = ARIMA(train, order=(29, 1, 1))
         model = model.fit()
         #     self.plot_model_details(fitted_model)
-        prediction = model.forecast(forecast_steps)
+        prediction = model.forecast(horizon)
         print("fit_and_pred")
         return prediction
 
-    def multistep_forecast(self, test_from_date, test_to_date, forecast_steps):
-        date_range = pd.date_range(test_from_date, test_to_date, freq=str(forecast_steps) + "H")
+    def multistep_forecast(self, test_from_date, test_to_date, horizon):
+        date_range = pd.date_range(test_from_date, test_to_date, freq=str(horizon) + "H")
         prediction = []
         for date in date_range:
             prediction = np.append(prediction,
-                self.fit_and_predict(self.preparator, test_from_date=date, forecast_steps=forecast_steps))
+                                   self.fit_and_predict(self.preparator, test_from_date=date, horizon=horizon))
         return self.format_prediction(prediction, self.test)
 
     @staticmethod
@@ -66,6 +66,6 @@ class ArimaModel:
 
 
 
-#model = ArimaModel("solar_absolute", test_from_date="2020-02-01 00:00", test_to_date="2020-02-01 10:00", forecast_steps=5)
-#print_forecast(model.train, model.test, model.multi_pred)
+model = ArimaModel("solar_absolute", test_from_date="2020-05-01 00:00", test_to_date="2020-05-03 10:00", horizon=5)
+print_forecast(model.train, model.test, model.prediction)
 
