@@ -1,19 +1,20 @@
+from datetime import datetime
 import pandas as pd
 from keras import Sequential
-from keras.callbacks import EarlyStopping, CSVLogger
+from keras.callbacks import EarlyStopping
 from keras.layers import LSTM, Dense
 import numpy as np
 from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import GridSearchCV
-
 from preparator import Preparator
 import matplotlib.pyplot as plt
 from error_metric_calculator import Metrics
-import printer
 
 
 class LSTMModel:
-    def __init__(self, attribute, test_from_date, test_to_date, horizon, dropout, hidden_layers, activation, batch_size, epochs):
+    def __init__(self, attribute, test_from_date, test_to_date, horizon, dropout, hidden_layers, activation, batch_size,
+                 epochs):
+        # hyperparameters
         self.dropout = dropout
         self.hidden_layers = hidden_layers
         self.activation = activation
@@ -23,13 +24,16 @@ class LSTMModel:
         self.preparator = Preparator(attribute, test_from_date)
         self.x_train, self.x_test, self.y_train, self.y_test = self.preparator.get_scaled_data(test_from_date)
 
-        #   self.pred, self.best_params = self.fit_and_predict(test_from_date, horizon, batch_size, epochs)
         self.prediction, self.best_params = self.multistep_forecast(test_from_date, test_to_date, horizon)
 
-        self.individual_scores, self.overall_scores = Metrics().calculate_errors(self.preparator.y_test[horizon:], self.prediction)
-        printer.print_single_forecast(self.preparator.y_train, self.preparator.y_test, self.prediction)
+        self.individual_error_scores, self.overall_error_scores = Metrics().calculate_errors(
+            self.preparator.y_test[horizon:], self.prediction)
+        self.std_error = self.individual_error_scores.std()
 
-    def prepare_sliding_windows(self, feature, target, sliding_window):
+    #     printer.print_single_forecast(self.preparator.y_train, self.preparator.y_test, self.prediction)
+
+    @staticmethod
+    def prepare_sliding_windows(feature, target, sliding_window):
         X, Y = [], []
         for i in range(len(feature) - sliding_window):
             X.append(feature[i:(i + sliding_window), :])  # features
@@ -69,7 +73,13 @@ class LSTMModel:
         model.summary()
         return model
 
+    @staticmethod
+    def set_callbacks():
+        early_stopper = EarlyStopping(monitor='loss', patience=20, mode="min", restore_best_weights=True, verbose=2)
+        return early_stopper
+
     def grid_search_lstm(self, x_train, y_train, build_model):
+        start = datetime.now()
         input_shape = (x_train.shape[1], x_train.shape[2])
         model = KerasRegressor(
             build_fn=build_model,
@@ -83,24 +93,39 @@ class LSTMModel:
 
         rs = GridSearchCV(model, param_grid=hyperparameters, cv=cv, n_jobs=-1)
         rs.fit(x_train, y_train, verbose=1)
-        best_params = rs.best_params_
 
-        return best_params
+        end = datetime.now()
+        duration = end - start
+        print("Total duration of LSTM grid search: {}".format(duration))
+        print("Best hyperparameters: {}".format(rs.best_params_))
+
+        return rs.best_params_
 
     def fit_and_predict(self, test_from_date, horizon, best_params):
+        start = datetime.now()
+        print("LSTM fit and predict, test_from_date={}, horizon={}, best_params={}".format(test_from_date, horizon,
+                                                                                           best_params))
         x_train, x_test, y_train, y_test = self.split_data(test_from_date, horizon)
         input_shape = (x_train.shape[1], x_train.shape[2])
+        my_callbacks = self.set_callbacks()
         model = self.lstm1(best_params["hidden_layer"], best_params["dropout"], input_shape, best_params["activation"])
-        history = model.fit(x_train, y_train, epochs=self.epochs, batch_size=self.batch_size, verbose=1, shuffle=False)
+        history = model.fit(x_train, y_train, epochs=self.epochs, batch_size=self.batch_size, callbacks=my_callbacks,
+                            verbose=1, shuffle=False)
         self.plot_loss(history)
         predictions = []
         for x in x_test:
             pred = model.predict(np.reshape(x, (1, x_test.shape[1], x_test.shape[2])))
             inverse_scaled_pred = self.preparator.inverse_scaler(pred)
             predictions.append(inverse_scaled_pred.ravel())
+
+        end = datetime.now()
+        duration = end - start
+        print("Duration: {}".format(duration))
+
         return predictions
 
     def multistep_forecast(self, test_from_date, test_to_date, horizon):
+        start = datetime.now()
         x_train, x_test, y_train, y_test = self.split_data(test_from_date, horizon)
         best_params = self.grid_search_lstm(x_train, y_train, self.lstm1)
 
@@ -108,6 +133,11 @@ class LSTMModel:
         predictions = []
         for date in date_range:
             predictions = np.append(predictions, self.fit_and_predict(date, horizon, best_params))
+
+        end = datetime.now()
+        duration = end - start
+        print("Total duration of LSTM multistep forecast: {}".format(duration))
+
         return self.format_prediction(predictions, horizon), best_params
 
     def format_prediction(self, prediction, horizon):
@@ -116,13 +146,11 @@ class LSTMModel:
         prediction.index = pd.DatetimeIndex(prediction.index)
         return prediction
 
-    def plot_loss(self, history):
+    @staticmethod
+    def plot_loss(history):
         plt.plot(history.history['loss'], label='train')
         #   plt.plot(history.history['val_loss'], label='test')
         plt.legend()
         plt.show()
 
-
-
-
-#lstm = LSTMModel("solar_absolute", test_from_date="2020-01-10 00:00", test_to_date="2020-01-11 00:00", horizon=12)
+# lstm = LSTMModel("solar_absolute", test_from_date="2020-01-10 00:00", test_to_date="2020-01-11 00:00", horizon=12)

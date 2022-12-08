@@ -42,6 +42,7 @@ class Metrics:
         df = pd.DataFrame(rmse_scores, columns=["rmse"])
         df["mae"] = mae_scores
   #      df["rmspe"] = rmspe_scores
+        df.index = actual.index
         return df
 
         # Errors of all outputs are averaged with uniform weight.
