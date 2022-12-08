@@ -19,7 +19,7 @@ class ArimaModel:
         self.preparator = Preparator(attribute, test_from_date)
         self.train, self.test = self.preparator.train_test_split_by_date(self.preparator.historical_df,
                                                                          test_from_date=test_from_date)
-        self.prediction, self.best_params = self.multistep_forecast(test_from_date, test_to_date, horizon=horizon)
+        self.prediction, self.best_params, self.duration = self.multistep_forecast(test_from_date, test_to_date, horizon=horizon)
 
         self.individual_error_scores, self.overall_error_scores = Metrics().calculate_errors(self.test, self.prediction)
         self.std_error = self.individual_error_scores.std()
@@ -67,7 +67,7 @@ class ArimaModel:
         end = datetime.now()
         duration = end - start
         print("Total duration of ARIMA multistep forecast: {}".format(duration))
-        return self.format_prediction(prediction, self.test), best_params
+        return self.format_prediction(prediction, self.test), best_params, duration
 
     @staticmethod
     def format_prediction(prediction, test):

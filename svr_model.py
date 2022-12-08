@@ -19,13 +19,14 @@ class SVRModel:
         self.preparator = Preparator(attribute, test_from_date)
         self.y_train, self.y_test = self.preparator.y_train, self.preparator.y_test
 
-        self.prediction, self.best_params = self.multistep_forecast(test_from_date=test_from_date,
-                                                                    test_to_date=test_to_date,
-                                                                    horizon=horizon)
+        self.prediction, self.best_params, self.duration = self.multistep_forecast(test_from_date=test_from_date,
+                                                                                   test_to_date=test_to_date,
+                                                                                   horizon=horizon)
 
         self.individual_error_scores, self.overall_error_scores = Metrics().calculate_errors(self.preparator.y_test,
                                                                                              self.prediction)
         self.std_error = self.individual_error_scores.std()
+
 
     #   printer.print_error(self.individual_error_scores)
     #   printer.print_single_forecast(self.y_train, self.y_test, self.prediction)
@@ -73,12 +74,12 @@ class SVRModel:
         prediction = []
         for date in date_range:
             prediction = np.append(prediction, self.fit_and_predict(test_from_date=date, horizon=horizon,
-                                                                    best_params=self.best_params))
+                                                                    best_params=best_params))
         end = datetime.now()
         duration = end - start
         print("Total duration of SVR multistep forecast: {}".format(duration))
 
-        return self.format_prediction(prediction), best_params
+        return self.format_prediction(prediction), best_params, duration
 
     def format_prediction(self, prediction):
         prediction = pd.Series(prediction)

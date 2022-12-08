@@ -5,6 +5,7 @@ from keras.callbacks import EarlyStopping
 from keras.layers import LSTM, Dense
 import numpy as np
 from keras.wrappers.scikit_learn import KerasRegressor
+from pathlib2 import Path
 from sklearn.model_selection import GridSearchCV
 from preparator import Preparator
 import matplotlib.pyplot as plt
@@ -13,7 +14,7 @@ from error_metric_calculator import Metrics
 
 class LSTMModel:
     def __init__(self, attribute, test_from_date, test_to_date, horizon, dropout, hidden_layers, activation, batch_size,
-                 epochs):
+                 epochs, file_path):
         # hyperparameters
         self.dropout = dropout
         self.hidden_layers = hidden_layers
@@ -24,7 +25,7 @@ class LSTMModel:
         self.preparator = Preparator(attribute, test_from_date)
         self.x_train, self.x_test, self.y_train, self.y_test = self.preparator.get_scaled_data(test_from_date)
 
-        self.prediction, self.best_params = self.multistep_forecast(test_from_date, test_to_date, horizon)
+        self.prediction, self.best_params, self.duration = self.multistep_forecast(test_from_date, test_to_date, horizon, file_path)
 
         self.individual_error_scores, self.overall_error_scores = Metrics().calculate_errors(
             self.preparator.y_test[horizon:], self.prediction)
@@ -101,7 +102,7 @@ class LSTMModel:
 
         return rs.best_params_
 
-    def fit_and_predict(self, test_from_date, horizon, best_params):
+    def fit_and_predict(self, test_from_date, horizon, best_params, file_path):
         start = datetime.now()
         print("LSTM fit and predict, test_from_date={}, horizon={}, best_params={}".format(test_from_date, horizon,
                                                                                            best_params))
@@ -110,8 +111,8 @@ class LSTMModel:
         my_callbacks = self.set_callbacks()
         model = self.lstm1(best_params["hidden_layer"], best_params["dropout"], input_shape, best_params["activation"])
         history = model.fit(x_train, y_train, epochs=self.epochs, batch_size=self.batch_size, callbacks=my_callbacks,
-                            verbose=1, shuffle=False)
-        self.plot_loss(history)
+                            verbose=1, shuffle=False, validation_data=(x_test, y_test))
+        self.plot_loss(history, file_path, horizon)
         predictions = []
         for x in x_test:
             pred = model.predict(np.reshape(x, (1, x_test.shape[1], x_test.shape[2])))
@@ -124,7 +125,7 @@ class LSTMModel:
 
         return predictions
 
-    def multistep_forecast(self, test_from_date, test_to_date, horizon):
+    def multistep_forecast(self, test_from_date, test_to_date, horizon, file_path):
         start = datetime.now()
         x_train, x_test, y_train, y_test = self.split_data(test_from_date, horizon)
         best_params = self.grid_search_lstm(x_train, y_train, self.lstm1)
@@ -132,13 +133,13 @@ class LSTMModel:
         date_range = pd.date_range(test_from_date, test_to_date, freq=str(horizon) + "H")
         predictions = []
         for date in date_range:
-            predictions = np.append(predictions, self.fit_and_predict(date, horizon, best_params))
+            predictions = np.append(predictions, self.fit_and_predict(date, horizon, best_params, file_path))
 
         end = datetime.now()
         duration = end - start
         print("Total duration of LSTM multistep forecast: {}".format(duration))
 
-        return self.format_prediction(predictions, horizon), best_params
+        return self.format_prediction(predictions, horizon), best_params, duration
 
     def format_prediction(self, prediction, horizon):
         prediction = pd.Series(prediction)
@@ -147,10 +148,18 @@ class LSTMModel:
         return prediction
 
     @staticmethod
-    def plot_loss(history):
-        plt.plot(history.history['loss'], label='train')
-        #   plt.plot(history.history['val_loss'], label='test')
+    def plot_loss(history, file_path, horizon):
+        file_path = file_path + "/models/LSTM-" + str(horizon) + "h/loss_plots"
+        Path(file_path).mkdir(parents=True, exist_ok=True)
+        time = datetime.now().strftime("%H-%M-%S")
+        plt.figure()
+        plt.plot(history.history['loss'], label='training loss')
+        plt.plot(history.history['val_loss'], label='validation')
+        plt.title('LSTM training vs validation loss')
+        plt.ylabel('MSE')
+        plt.xlabel('Epochs')
         plt.legend()
-        plt.show()
+        plt.savefig(file_path + "/loss_" + time + ".png")
+      #  plt.show()
 
-# lstm = LSTMModel("solar_absolute", test_from_date="2020-01-10 00:00", test_to_date="2020-01-11 00:00", horizon=12)
+#lstm = LSTMModel("solar_absolute", test_from_date="2020-01-10 00:00", test_to_date="2020-01-11 00:00", horizon=12)
