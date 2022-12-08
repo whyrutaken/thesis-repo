@@ -22,10 +22,10 @@ class LSTMModel:
         self.x_train, self.x_test, self.y_train, self.y_test = self.preparator.get_scaled_data(test_from_date)
 
         #   self.pred, self.best_params = self.fit_and_predict(test_from_date, horizon, batch_size, epochs)
-        self.pred, self.best_params = self.multistep_forecast(test_from_date, test_to_date, horizon, batch_size, epochs)
+        self.prediction, self.best_params = self.multistep_forecast(test_from_date, test_to_date, horizon, batch_size, epochs)
 
-        self.individual_scores, self.overall_scores = Metrics().calculate_errors(self.preparator.y_test[horizon:], self.pred)
-        printer.print_single_forecast(self.preparator.y_train, self.preparator.y_test, self.pred)
+        self.individual_scores, self.overall_scores = Metrics().calculate_errors(self.preparator.y_test[horizon:], self.prediction)
+        printer.print_single_forecast(self.preparator.y_train, self.preparator.y_test, self.prediction)
 
     def prepare_sliding_windows(self, feature, target, sliding_window):
         X, Y = [], []
@@ -36,6 +36,13 @@ class LSTMModel:
         Y = np.array(Y)
         Y = Y.reshape(Y.shape[0], 1)
         return X, Y
+
+    def split_data(self, test_from_date, horizon):
+        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date)
+        x_train, y_train = self.prepare_sliding_windows(x_train, y_train, horizon)
+        x_test, y_test = self.prepare_sliding_windows(x_test, y_test, horizon)
+        x_test, y_test = x_test[:horizon, :], y_test[:horizon]
+        return x_train, x_test, y_train, y_test
 
     @staticmethod
     def lstm1(hidden_layer, dropout, input_shape, activation):
@@ -61,7 +68,7 @@ class LSTMModel:
         return model
 
     def grid_search_lstm(self, x_train, y_train, build_model):
-        dropout_rate_opts = (0, 0.3, 0.6)
+        dropout_rate_opts = (0, 0.1, 0.2)
         hidden_layers_opts = (64, 128, 256, 512)
         activation = ("tanh", "relu")
 
@@ -81,16 +88,12 @@ class LSTMModel:
         rs.fit(x_train, y_train, verbose=1)
         best_params = rs.best_params_
 
-        model = build_model(best_params["hidden_layer"], best_params["dropout"], input_shape, best_params["activation"])
-        return model, best_params
+        return best_params
 
-    def fit_and_predict(self, test_from_date, horizon, batch_size, epochs):
-        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date)
-        x_train, y_train = self.prepare_sliding_windows(x_train, y_train, horizon)
-        x_test, y_test = self.prepare_sliding_windows(x_test, y_test, horizon)
-        x_test, y_test = x_test[:horizon, :], y_test[:horizon]
-
-        model, best_params = self.grid_search_lstm(x_train, y_train, self.lstm1)
+    def fit_and_predict(self, test_from_date, horizon, batch_size, epochs, best_params):
+        x_train, x_test, y_train, y_test = self.split_data(test_from_date, horizon)
+        input_shape = (x_train.shape[1], x_train.shape[2])
+        model = self.lstm1(best_params["hidden_layer"], best_params["dropout"], input_shape, best_params["activation"])
         history = model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, verbose=1, shuffle=False)
         self.plot_loss(history)
         predictions = []
@@ -98,16 +101,16 @@ class LSTMModel:
             pred = model.predict(np.reshape(x, (1, x_test.shape[1], x_test.shape[2])))
             inverse_scaled_pred = self.preparator.inverse_scaler(pred)
             predictions.append(inverse_scaled_pred.ravel())
-        return predictions, best_params
+        return predictions
 
     def multistep_forecast(self, test_from_date, test_to_date, horizon, batch_size, epochs):
+        x_train, x_test, y_train, y_test = self.split_data(test_from_date, horizon)
+        best_params = self.grid_search_lstm(x_train, y_train, self.lstm1)
+
         date_range = pd.date_range(test_from_date, test_to_date, freq=str(horizon) + "H")
         predictions = []
-        best_params = []
         for date in date_range:
-            pred, bp = self.fit_and_predict(date, horizon, batch_size, epochs)
-            predictions = np.append(predictions, pred)
-            best_params = np.append(best_params, bp)
+            predictions = np.append(predictions, self.fit_and_predict(date, horizon, batch_size, epochs, best_params))
         return self.format_prediction(predictions, horizon), best_params
 
     def format_prediction(self, prediction, horizon):
@@ -125,4 +128,4 @@ class LSTMModel:
 
 
 
-lstm = LSTMModel("solar_absolute", test_from_date="2020-01-10 00:00", test_to_date="2020-01-12 00:00", horizon=12)
+lstm = LSTMModel("solar_absolute", test_from_date="2020-01-10 00:00", test_to_date="2020-01-11 00:00", horizon=12)

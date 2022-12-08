@@ -1,5 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.model_selection import GridSearchCV
+
 from preparator import Preparator
 from sklearn.svm import SVR
 import numpy as np
@@ -22,9 +24,13 @@ class SVRModel:
         printer.print_single_forecast(self.y_train, self.y_test, self.prediction)
 
 
-    def fit_and_predict(self, test_from_date, horizon):
+
+
+    def fit_and_predict(self, test_from_date, horizon, best_params):
         x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date=test_from_date)
-        model = SVR(C=10, cache_size=200, coef0=0.0, degree=3, epsilon=0.05, gamma=0.5, kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=True)
+        model = SVR(kernel=best_params["kernel"], C=best_params["C"], degree=best_params["degree"], coef0=best_params["coef0"], gamma=best_params["gamma"], verbose=True)
+     #   model = SVR(C=10, cache_size=200, coef0=0.0, degree=3, epsilon=0.05, gamma=0.5, kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=True)
+
         model = model.fit(x_train, y_train.ravel())
         prediction = model.predict(x_test[:horizon])
         inverse_scaled_prediction = self.preparator.inverse_scaler(prediction)
@@ -37,15 +43,32 @@ class SVRModel:
         prediction.index = pd.DatetimeIndex(prediction.index)
         return prediction
 
+    def grid_search(self, test_from_date, hyperparameters):
+        kernel = ('poly', 'rbf')
+        C = (1, 5, 10)
+        degree = (9, 12, 15)
+        coef0 = (0.5, 1.0, 1.5)
+        gamma = ('auto', 'scale')
+        hyperparameters = dict(kernel=kernel, C=C, degree=degree, coef0=coef0, gamma=gamma,)
+        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date=test_from_date)
+
+        model = SVR(verbose=True)
+        cv = [(slice(None), slice(None))]
+        rs = GridSearchCV(model, param_grid=hyperparameters, cv=cv, n_jobs=-1)
+        rs.fit(x_train, y_train)
+        return rs.best_params_
+
+
     def multistep_forecast(self, test_from_date, test_to_date, horizon=1):
+        self.best_params = self.grid_search(test_from_date, "")
         date_range = pd.date_range(test_from_date, test_to_date, freq=str(horizon) + "H")
         prediction = []
         for date in date_range:
-            prediction = np.append(prediction, self.fit_and_predict(test_from_date=date, horizon=horizon))
+            prediction = np.append(prediction, self.fit_and_predict(test_from_date=date, horizon=horizon, best_params=self.best_params))
         return self.format_prediction(prediction)
 
 
-model = SVRModel("solar_absolute", test_from_date="2020-06-01 00:00", test_to_date="2020-06-02 00:00", horizon=3)
+model = SVRModel("solar_absolute", test_from_date="2020-01-10 00:00", test_to_date="2020-01-11 00:00", horizon=24)
 
 
 

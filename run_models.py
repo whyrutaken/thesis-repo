@@ -23,6 +23,6 @@ if __name__ == '__main__':
 #    arima = ArimaModel(attribute, test_from_date, test_to_date, horizon)
     lstm = LSTMModel(attribute, test_from_date, test_to_date, horizon)
  #   printer.print_single_forecast(lstm.preparator.y_train, lstm.preparator.y_test, lstm.pred)
-    printer.print_double_forecast(lstm.preparator.y_train, lstm.preparator.y_test, lstm.pred, svr.prediction)
+    printer.print_double_forecast(lstm.preparator.y_train, lstm.preparator.y_test, lstm.prediction, svr.prediction)
 
 # printer.print_multi_forecast(svr.y_train, svr.y_test, arima.prediction, arima2.prediction, arima3.prediction)

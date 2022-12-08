@@ -25,7 +25,6 @@ class Metrics:
         epsilon = 1e-10
         return (np.sqrt(np.mean(np.square((actual - forecast) / (actual + epsilon))))) * 100
 
-
     def individual_scores(self, actual, forecast):
         rmse_scores = []
         mae_scores = []
@@ -37,7 +36,6 @@ class Metrics:
         return df
 
         # Errors of all outputs are averaged with uniform weight.
-
 
     def overall_scores(self, actual, forecast):
         rmse_score = self.rmse(actual, forecast)
