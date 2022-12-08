@@ -14,12 +14,16 @@ import printer
 
 class ArimaModel:
 
-    def __init__(self, attribute, test_from_date, test_to_date, horizon):
+    def __init__(self, attribute, test_from_date, test_to_date, horizon, p_values, q_values, d_values):
+        self.p_values = p_values
+        self.q_values = q_values
+        self.d_values = d_values
+
         self.preparator = Preparator(attribute, test_from_date)
         self.train, self.test = self.preparator.train_test_split_by_date(self.preparator.historical_df,
                                                                          test_from_date=test_from_date)
-
         self.prediction = self.multistep_forecast(test_from_date, test_to_date, horizon=horizon)
+
         self.individual_scores, self.overall_scores = Metrics().calculate_errors(self.test, self.prediction)
 
     def fit_and_predict(self, df, test_from_date, horizon, order):
@@ -32,14 +36,11 @@ class ArimaModel:
         return prediction
 
     def grid_search(self, df, test_from_date, horizon):
-        p_values = (24, 27, 29)
-        q_values = (1, 2)
-        d_values = (1, 2)
-        best_score = 100000
+        best_score = 100000000
         best_order = 0
-        for p in p_values:
-            for q in q_values:
-                for d in d_values:
+        for p in self.p_values:
+            for q in self.q_values:
+                for d in self.d_values:
                     prediction = self.fit_and_predict(df, test_from_date, horizon, order=(p, d, q))
                     individual_scores, overall_scores = Metrics().calculate_errors(self.test, prediction)
                     if (np.array(overall_scores) < np.array(best_score)).all():
@@ -71,5 +72,5 @@ class ArimaModel:
         plt.show()
 
 
-model = ArimaModel("solar_absolute", test_from_date="2020-01-10 00:00", test_to_date="2020-01-11 10:00", horizon=5)
-printer.print_single_forecast(model.train, model.test, model.prediction)
+#model = ArimaModel("solar_absolute", test_from_date="2020-01-10 00:00", test_to_date="2020-01-11 10:00", horizon=5)
+#printer.print_single_forecast(model.train, model.test, model.prediction)

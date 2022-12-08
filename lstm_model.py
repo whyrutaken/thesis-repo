@@ -13,16 +13,18 @@ import printer
 
 
 class LSTMModel:
-    def __init__(self, attribute, test_from_date, test_to_date, horizon):
-
-        batch_size = 168
-        epochs = 10
+    def __init__(self, attribute, test_from_date, test_to_date, horizon, dropout, hidden_layers, activation, batch_size, epochs):
+        self.dropout = dropout
+        self.hidden_layers = hidden_layers
+        self.activation = activation
+        self.batch_size = batch_size
+        self.epochs = epochs
 
         self.preparator = Preparator(attribute, test_from_date)
         self.x_train, self.x_test, self.y_train, self.y_test = self.preparator.get_scaled_data(test_from_date)
 
         #   self.pred, self.best_params = self.fit_and_predict(test_from_date, horizon, batch_size, epochs)
-        self.prediction, self.best_params = self.multistep_forecast(test_from_date, test_to_date, horizon, batch_size, epochs)
+        self.prediction, self.best_params = self.multistep_forecast(test_from_date, test_to_date, horizon)
 
         self.individual_scores, self.overall_scores = Metrics().calculate_errors(self.preparator.y_test[horizon:], self.prediction)
         printer.print_single_forecast(self.preparator.y_train, self.preparator.y_test, self.prediction)
@@ -68,17 +70,12 @@ class LSTMModel:
         return model
 
     def grid_search_lstm(self, x_train, y_train, build_model):
-        dropout_rate_opts = (0, 0.1, 0.2)
-        hidden_layers_opts = (64, 128, 256, 512)
-        activation = ("tanh", "relu")
-
-        # n_timesteps, n_features
         input_shape = (x_train.shape[1], x_train.shape[2])
         model = KerasRegressor(
             build_fn=build_model,
-            hidden_layer=hidden_layers_opts, dropout=dropout_rate_opts, input_shape=input_shape, activation=activation
+            hidden_layer=self.hidden_layers, dropout=self.dropout, input_shape=input_shape, activation=self.activation
         )
-        hyperparameters = dict(hidden_layer=hidden_layers_opts, dropout=dropout_rate_opts, activation=activation)
+        hyperparameters = dict(hidden_layer=self.hidden_layers, dropout=self.dropout, activation=self.activation)
 
         # get rid of the cross-validation
         # source: https://stackoverflow.com/questions/44636370/scikit-learn-gridsearchcv-without-cross-validation-unsupervised-learning
@@ -90,11 +87,11 @@ class LSTMModel:
 
         return best_params
 
-    def fit_and_predict(self, test_from_date, horizon, batch_size, epochs, best_params):
+    def fit_and_predict(self, test_from_date, horizon, best_params):
         x_train, x_test, y_train, y_test = self.split_data(test_from_date, horizon)
         input_shape = (x_train.shape[1], x_train.shape[2])
         model = self.lstm1(best_params["hidden_layer"], best_params["dropout"], input_shape, best_params["activation"])
-        history = model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, verbose=1, shuffle=False)
+        history = model.fit(x_train, y_train, epochs=self.epochs, batch_size=self.batch_size, verbose=1, shuffle=False)
         self.plot_loss(history)
         predictions = []
         for x in x_test:
@@ -103,14 +100,14 @@ class LSTMModel:
             predictions.append(inverse_scaled_pred.ravel())
         return predictions
 
-    def multistep_forecast(self, test_from_date, test_to_date, horizon, batch_size, epochs):
+    def multistep_forecast(self, test_from_date, test_to_date, horizon):
         x_train, x_test, y_train, y_test = self.split_data(test_from_date, horizon)
         best_params = self.grid_search_lstm(x_train, y_train, self.lstm1)
 
         date_range = pd.date_range(test_from_date, test_to_date, freq=str(horizon) + "H")
         predictions = []
         for date in date_range:
-            predictions = np.append(predictions, self.fit_and_predict(date, horizon, batch_size, epochs, best_params))
+            predictions = np.append(predictions, self.fit_and_predict(date, horizon, best_params))
         return self.format_prediction(predictions, horizon), best_params
 
     def format_prediction(self, prediction, horizon):
@@ -128,4 +125,4 @@ class LSTMModel:
 
 
 
-lstm = LSTMModel("solar_absolute", test_from_date="2020-01-10 00:00", test_to_date="2020-01-11 00:00", horizon=12)
+#lstm = LSTMModel("solar_absolute", test_from_date="2020-01-10 00:00", test_to_date="2020-01-11 00:00", horizon=12)

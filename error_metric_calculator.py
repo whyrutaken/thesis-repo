@@ -2,8 +2,8 @@ from math import sqrt
 
 import pandas as pd
 import numpy as np
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-
+from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error, r2_score
+from sklearn.preprocessing import MinMaxScaler
 
 class Metrics:
     # def __init__(self, prediction, actual):
@@ -15,24 +15,33 @@ class Metrics:
     @staticmethod
     def mae(actual, forecast):
         return mean_absolute_error(actual, forecast)
-
+    @staticmethod
+    def mape(actual, forecast):
+        actual = actual + 0.1
+        return mean_absolute_percentage_error(actual, forecast)
     @staticmethod
     def r2(actual, forecast):
         return r2_score(actual, forecast)
 
     @staticmethod
     def rmspe(actual, forecast):
-        epsilon = 1e-10
-        return (np.sqrt(np.mean(np.square((actual - forecast) / (actual + epsilon))))) * 100
+        scaler = MinMaxScaler()
+        forecast = scaler.fit_transform(forecast)
+        actual = scaler.transform(actual)
+        return np.sqrt(np.nanmean(np.square((np.array(forecast) - np.array(actual)) / np.array(actual))))
 
     def individual_scores(self, actual, forecast):
         rmse_scores = []
         mae_scores = []
+   #     rmspe_scores = []
         for i in range(len(forecast)):
             rmse_scores.append(self.rmse(actual.iloc[i], forecast.iloc[i]))
             mae_scores.append(self.mae(actual.iloc[i], forecast.iloc[i]))
+  #          rmspe_scores.append(self.rmspe(actual.iloc[i], forecast.iloc[i]))
+
         df = pd.DataFrame(rmse_scores, columns=["rmse"])
         df["mae"] = mae_scores
+  #      df["rmspe"] = rmspe_scores
         return df
 
         # Errors of all outputs are averaged with uniform weight.
