@@ -47,14 +47,14 @@ def save_results(date, config, model, model_name, horizon):
         fp.write(json.dumps(model.best_params))
     with open(path + '/duration.txt', 'w') as fp:
         fp.write(str(model.duration))
-    with open(date + "/hyperparameters.toml", mode="wb") as fp:
+    with open(date + "/config.toml", mode="wb") as fp:
         tomli_w.dump(config, fp)
 
 
 # %%
 if __name__ == '__main__':
     date = datetime.now().strftime("%m-%d--%H-%M")
-    with open("run_models.toml", mode="rb") as fp:
+    with open("config.toml", mode="rb") as fp:
         config = tomli.load(fp)
 
     attribute, test_from_date, test_to_date, horizon = config["attribute"], config["test_from_date"], config[

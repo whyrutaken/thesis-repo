@@ -149,12 +149,12 @@ class LSTMModel:
 
     @staticmethod
     def plot_loss(history, file_path, horizon):
-        file_path = file_path + "/models/LSTM-" + str(horizon) + "h/loss_plots"
+        file_path = file_path[0] + "/models-i" + str(file_path[1]) + "/LSTM-" + str(horizon) + "h/loss_plots"
         Path(file_path).mkdir(parents=True, exist_ok=True)
         time = datetime.now().strftime("%H-%M-%S")
         plt.figure()
         plt.plot(history.history['loss'], label='training loss')
-        plt.plot(history.history['val_loss'], label='validation')
+        plt.plot(history.history['val_loss'], label='validation loss')
         plt.title('LSTM training vs validation loss')
         plt.ylabel('MSE')
         plt.xlabel('Epochs')

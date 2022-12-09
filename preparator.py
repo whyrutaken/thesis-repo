@@ -78,4 +78,4 @@ class Preparator:
         return train, test
 
 
-preparator = Preparator("solar_absolute", "2022-01-01")
+#preparator = Preparator("solar_absolute", "2022-01-01")
