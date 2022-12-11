@@ -8,34 +8,8 @@ import tomli_w
 import json
 
 
-def get_arima_values(config):
-    p_values_ = tuple(config["arima"]["p"])
-    q_values_ = tuple(config["arima"]["q"])
-    d_values_ = tuple(config["arima"]["d"])
-    return p_values_, q_values_, d_values_
-
-
-def get_svr_values(config):
-    kernel_ = tuple(config["svr"]["kernel"])
-    C_ = tuple(config["svr"]["c"])
-    degree_ = tuple(config["svr"]["degree"])
-    coef0_ = tuple(config["svr"]["coef0"])
-    gamma_ = tuple(config["svr"]["gamma"])
-    return kernel_, C_, degree_, coef0_, gamma_
-
-
-def get_lstm_values(config):
-    dropout_ = tuple(config["lstm"]["dropout"])
-    hidden_layers_ = tuple(config["lstm"]["hidden_layer"])
-    activation_ = tuple(config["lstm"]["activation"])
-    batch_size_ = config["lstm"]["batch_size"]
-    epochs_ = config["lstm"]["epochs"]
-    return dropout_, hidden_layers_, activation_, batch_size_, epochs_
-
-
-def save_results(date, config, model, model_name, horizon):
-    path = date + "/models/" + model_name + "-" + str(horizon) + "h"
-    loss_path = path + "/loss_plots"
+def save_results(date, config, model, model_name, horizon, iteration):
+    path = date + "/models-i" + str(iteration) + "/" + model_name + "-" + str(horizon) + "h"
     Path(path).mkdir(parents=True, exist_ok=True)
 
     model.prediction.to_csv(path + "/predictions.csv")
@@ -56,29 +30,16 @@ if __name__ == '__main__':
     date = datetime.now().strftime("%m-%d--%H-%M")
     with open("config.toml", mode="rb") as fp:
         config = tomli.load(fp)
+    horizon = config["horizon"]
 
-    attribute, test_from_date, test_to_date, horizon = config["attribute"], config["test_from_date"], config[
-        "test_to_date"], config["horizon"]
-    p_values, q_values, d_values = get_arima_values(config)
-    kernel, C, degree, coef0, gamma = get_svr_values(config)
-    dropout, hidden_layers, activation, batch_size, epochs = get_lstm_values(config)
-
-
-
-    for i in range(1, 2):
+    for i in range(1, 5):
         for h in horizon:
-            arima = ArimaModel(horizon=h, attribute=attribute, test_from_date=test_from_date, test_to_date=test_to_date,
-                               p_values=p_values, q_values=q_values, d_values=d_values)
-
-            svr = SVRModel(horizon=h, attribute=attribute, test_from_date=test_from_date, test_to_date=test_to_date,
-                           kernel=kernel, C=C, degree=degree, coef0=coef0, gamma=gamma)
-
-            lstm = LSTMModel(horizon=h, attribute=attribute, test_from_date=test_from_date, test_to_date=test_to_date,
-                             dropout=dropout, hidden_layers=hidden_layers, activation=activation, batch_size=batch_size,
-                             epochs=epochs, file_path=date)
-            save_results(date, config, svr, "SVR", h)
-            save_results(date, config, lstm, "LSTM", h)
-            save_results(date, config, arima, "ARIMA", h)
+            svr = SVRModel(horizon=h, grid_search=False)
+            save_results(date, config, svr, "SVR", h, i)
+            lstm = LSTMModel(horizon=h, file_path=[date, i], grid_search=False)
+            save_results(date, config, lstm, "LSTM", h, i)
+            arima = ArimaModel(horizon=h, grid_search=False)
+            save_results(date, config, arima, "ARIMA", h, i)
 
 # %%
 #  lstm = LSTMModel(attribute, test_from_date, test_to_date, horizon)
