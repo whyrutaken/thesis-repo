@@ -16,15 +16,15 @@ import tomli
 class LSTMModel:
     def __init__(self, horizon: int, file_path: list, grid_search: bool):
         # hyperparameters
-        attribute, test_from_date, test_to_date, dropout, hidden_layers, activation, self.batch_size, self.epochs, best_params = self.read_config()
+        attribute, train_from_date, test_from_date, test_to_date, dropout, hidden_layers, activation, self.batch_size, self.epochs, best_params = self.read_config()
         self.preparator = Preparator(attribute, test_from_date)
 
         if grid_search:
-            self.best_params = self.grid_search(test_from_date, horizon, self.lstm1, dropout, hidden_layers, activation)
+            self.best_params = self.grid_search(train_from_date=train_from_date, test_from_date=test_from_date, horizon=horizon, build_model=self.lstm1, dropout=dropout, hidden_layers=hidden_layers, activation=activation)
         else:
             self.best_params = best_params
-            self.prediction, self.duration = self.multistep_forecast(test_from_date, test_to_date, horizon, file_path,
-                                                                     best_params)
+            self.prediction, self.duration = self.multistep_forecast(train_from_date=train_from_date, test_from_date=test_from_date, test_to_date=test_to_date, horizon=horizon, file_path=file_path,
+                                                                     best_params=best_params)
 
             self.individual_error_scores, self.overall_error_scores = Metrics().calculate_errors(
                 self.preparator.y_test[horizon:], self.prediction)
@@ -36,15 +36,16 @@ class LSTMModel:
     def read_config():
         with open("config.toml", mode="rb") as fp:
             config = tomli.load(fp)
-        attribute_, test_from_date_, test_to_date_ = config["attribute"], config["test_from_date"], config[
-            "test_to_date"]
+        attribute_, train_from_date_, test_from_date_, test_to_date_ = config["attribute"], config["train_from_date"], \
+                                                                       config["test_from_date"], config[
+                                                                           "test_to_date"]
         dropout_ = tuple(config["lstm"]["dropout"])
         hidden_layers_ = tuple(config["lstm"]["hidden_layer"])
         activation_ = tuple(config["lstm"]["activation"])
         batch_size_ = config["lstm"]["batch_size"]
         epochs_ = config["lstm"]["epochs"]
         best_params_ = config["lstm"]["best_params"]
-        return attribute_, test_from_date_, test_to_date_, dropout_, hidden_layers_, activation_, batch_size_, epochs_, best_params_
+        return attribute_, train_from_date_, test_from_date_, test_to_date_, dropout_, hidden_layers_, activation_, batch_size_, epochs_, best_params_
 
     @staticmethod
     def prepare_sliding_windows(feature, target, sliding_window):
@@ -57,8 +58,9 @@ class LSTMModel:
         Y = Y.reshape(Y.shape[0], 1)
         return X, Y
 
-    def split_data(self, test_from_date, horizon):
-        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date)
+    def split_data(self, train_from_date, test_from_date, horizon):
+        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date=test_from_date,
+                                                                           train_from_date=train_from_date)
         x_train, y_train = self.prepare_sliding_windows(x_train, y_train, horizon)
         x_test, y_test = self.prepare_sliding_windows(x_test, y_test, horizon)
         x_test, y_test = x_test[:horizon, :], y_test[:horizon]
@@ -92,8 +94,9 @@ class LSTMModel:
         early_stopper = EarlyStopping(monitor='loss', patience=20, mode="min", restore_best_weights=True, verbose=2)
         return early_stopper
 
-    def grid_search(self, test_from_date, horizon, build_model, dropout, hidden_layers, activation):
-        x_train, x_test, y_train, y_test = self.split_data(test_from_date, horizon)
+    def grid_search(self, train_from_date, test_from_date, horizon, build_model, dropout, hidden_layers, activation):
+        x_train, x_test, y_train, y_test = self.split_data(test_from_date=test_from_date,
+                                                           train_from_date=train_from_date, horizon=horizon)
         start = datetime.now()
         print("LSTM Grid search started")
         input_shape = (x_train.shape[1], x_train.shape[2])
@@ -114,11 +117,12 @@ class LSTMModel:
         self.print_end(start, "Total duration of LSTM grid search: ")
         return rs.best_params_
 
-    def fit_and_predict(self, test_from_date, horizon, best_params, file_path):
+    def fit_and_predict(self, train_from_date, test_from_date, horizon, best_params, file_path):
         start = datetime.now()
-        print("LSTM fit and predict, test_from_date={}, horizon={}, best_params={}".format(test_from_date, horizon,
-                                                                                           best_params))
-        x_train, x_test, y_train, y_test = self.split_data(test_from_date, horizon)
+        print("LSTM fit and predict, train_from_date={}, test_from_date={}, horizon={}, best_params={}".format(
+            train_from_date, test_from_date, horizon, best_params))
+        x_train, x_test, y_train, y_test = self.split_data(test_from_date=test_from_date,
+                                                           train_from_date=train_from_date, horizon=horizon)
         input_shape = (x_train.shape[1], x_train.shape[2])
         my_callbacks = self.set_callbacks()
         model = self.lstm1(best_params["hidden_layer"], best_params["dropout"], input_shape, best_params["activation"])
@@ -134,12 +138,14 @@ class LSTMModel:
         self.print_end(start, "Duration: ")
         return predictions
 
-    def multistep_forecast(self, test_from_date, test_to_date, horizon, file_path, best_params):
+    def multistep_forecast(self, train_from_date, test_from_date, test_to_date, horizon, file_path, best_params):
         start = datetime.now()
         date_range = pd.date_range(test_from_date, test_to_date, freq=str(horizon) + "H")
         predictions = []
         for date in date_range:
-            predictions = np.append(predictions, self.fit_and_predict(date, horizon, best_params, file_path))
+            predictions = np.append(predictions,
+                                    self.fit_and_predict(train_from_date=train_from_date, test_from_date=date,
+                                                         horizon=horizon, best_params=best_params, file_path=file_path))
         duration = self.print_end(start, "Total duration of LSTM multistep forecast: ")
         return self.format_prediction(predictions, horizon), duration
 

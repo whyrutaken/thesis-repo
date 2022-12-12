@@ -13,7 +13,7 @@ class Preparator:
         self.x_train, self.x_test = self.train_test_split_by_date(self.weather_df, test_from_date=test_from_date)
         self.y_train, self.y_test = self.train_test_split_by_date(self.historical_df, test_from_date=test_from_date)
 
-    def get_scaled_data(self, test_from_date):
+    def get_scaled_data(self, test_from_date, train_from_date="2020-01-01 00:00"):
         x_train, x_test = self.train_test_split_by_date(self.weather_df, test_from_date=test_from_date)
         y_train, y_test = self.train_test_split_by_date(self.historical_df, test_from_date=test_from_date)
         y_train = np.asarray(y_train).reshape(-1, 1)

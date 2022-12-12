@@ -13,15 +13,15 @@ class ArimaModel:
 
     def __init__(self, horizon: int, grid_search: bool):
         # hyperparameters
-        attribute, test_from_date, test_to_date, p_values, q_values, d_values, best_params = self.read_config()
+        attribute, train_from_date, test_from_date, test_to_date, p_values, q_values, d_values, best_params = self.read_config()
         self.preparator = Preparator(attribute, test_from_date)
         self.train, self.test = self.preparator.train_test_split_by_date(self.preparator.historical_df,
                                                                          test_from_date=test_from_date)
         if grid_search:
-            self.best_params = self.grid_search(self.preparator, test_from_date, horizon, p_values, q_values, d_values)
+            self.best_params = self.grid_search(df=self.preparator, train_from_date=train_from_date, test_from_date=test_from_date, horizon=horizon, p_values=p_values, q_values=q_values, d_values=d_values)
         else:
             self.best_params = best_params
-            self.prediction, self.duration = self.multistep_forecast(test_from_date, test_to_date, horizon=horizon,
+            self.prediction, self.duration = self.multistep_forecast(train_from_date=train_from_date, test_from_date=test_from_date, test_to_date=test_to_date, horizon=horizon,
                                                                      best_params=best_params)
 
             self.individual_error_scores, self.overall_error_scores = Metrics().calculate_errors(self.test,
@@ -32,28 +32,28 @@ class ArimaModel:
     def read_config():
         with open("config.toml", mode="rb") as fp:
             config = tomli.load(fp)
-        attribute_, test_from_date_, test_to_date_ = config["attribute"], config["test_from_date"], config[
+        attribute_, train_from_date_, test_from_date_, test_to_date_ = config["attribute"], config["train_from_date"], config["test_from_date"], config[
             "test_to_date"]
         p_values_ = tuple(config["arima"]["p"])
         q_values_ = tuple(config["arima"]["q"])
         d_values_ = tuple(config["arima"]["d"])
         best_params_ = tuple(config["arima"]["best_params"])
-        return attribute_, test_from_date_, test_to_date_, p_values_, q_values_, d_values_, best_params_
+        return attribute_, train_from_date_, test_from_date_, test_to_date_, p_values_, q_values_, d_values_, best_params_
 
-    def fit_and_predict(self, df, test_from_date, horizon, best_params):
+    def fit_and_predict(self, df, train_from_date, test_from_date, horizon, best_params):
         start = datetime.now()
-        print("ARIMA fit and predict, test_from_date={}, horizon={}, order={}".format(test_from_date, horizon,
+        print("ARIMA fit and predict, train_from_date={}, test_from_date={}, horizon={}, order={}".format(train_from_date, test_from_date, horizon,
                                                                                       best_params))
-
-        train, test = df.train_test_split_by_date(df.historical_df, test_from_date=test_from_date)
+        train, test = df.train_test_split_by_date(df.historical_df, test_from_date=test_from_date, train_from_date=train_from_date)
         model = ARIMA(train, order=best_params)
+        model.initialize_approximate_diffuse()
         model = model.fit()
         #     self.plot_model_details(fitted_model)
         prediction = model.forecast(horizon)
         self.print_end(start, "Duration: ")
         return prediction
 
-    def grid_search(self, df, test_from_date, horizon, p_values, q_values, d_values):
+    def grid_search(self, df, train_from_date, test_from_date, horizon, p_values, q_values, d_values):
         start = datetime.now()
         print("ARIMA Grid search started")
         best_score = 100000000  # easter egg
@@ -62,7 +62,7 @@ class ArimaModel:
             for q in q_values:
                 for d in d_values:
                     print("ARIMA Grid search with order ({},{},{})".format(p, d, q))
-                    prediction = self.fit_and_predict(df, test_from_date, horizon, best_params=(p, d, q))
+                    prediction = self.fit_and_predict(df=df, test_from_date=test_from_date, train_from_date=train_from_date, horizon=horizon, best_params=(p, d, q))
                     individual_scores, overall_scores = Metrics().calculate_errors(self.test, prediction)
                     if (np.array(overall_scores) < np.array(best_score)).all():
                         best_score = overall_scores
@@ -71,13 +71,13 @@ class ArimaModel:
         self.print_end(start, "Total duration of ARIMA grid search: ")
         return best_params
 
-    def multistep_forecast(self, test_from_date, test_to_date, horizon, best_params):
+    def multistep_forecast(self, train_from_date, test_from_date, test_to_date, horizon, best_params):
         start = datetime.now()
         date_range = pd.date_range(test_from_date, test_to_date, freq=str(horizon) + "H")
         prediction = []
         for date in date_range:
             prediction = np.append(prediction,
-                                   self.fit_and_predict(self.preparator, test_from_date=date, horizon=horizon,
+                                   self.fit_and_predict(df=self.preparator, train_from_date=train_from_date, test_from_date=date, horizon=horizon,
                                                         best_params=best_params))
         duration = self.print_end(start, "Total duration of ARIMA multistep forecast: ")
         return self.format_prediction(prediction, self.test), duration

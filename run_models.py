@@ -36,10 +36,12 @@ if __name__ == '__main__':
         for h in horizon:
             svr = SVRModel(horizon=h, grid_search=False)
             save_results(date, config, svr, "SVR", h, i)
-            lstm = LSTMModel(horizon=h, file_path=[date, i], grid_search=False)
-            save_results(date, config, lstm, "LSTM", h, i)
-            arima = ArimaModel(horizon=h, grid_search=False)
-            save_results(date, config, arima, "ARIMA", h, i)
+     #       lstm = LSTMModel(horizon=h, file_path=[date, i], grid_search=False)
+     #       save_results(date, config, lstm, "LSTM", h, i)
+     #       arima = ArimaModel(horizon=h, grid_search=False)
+     #       save_results(date, config, arima, "ARIMA", h, i)
+
+    print("End.")
 
 # %%
 #  lstm = LSTMModel(attribute, test_from_date, test_to_date, horizon)

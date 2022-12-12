@@ -11,15 +11,15 @@ import tomli
 class SVRModel:
     def __init__(self, horizon: int, grid_search: bool):
         # hyperparameters
-        attribute, test_from_date, test_to_date, kernel, C, degree, coef0, best_params = self.read_config()
+        attribute, train_from_date, test_from_date, test_to_date, kernel, C, degree, coef0, best_params = self.read_config()
         self.preparator = Preparator(attribute, test_from_date)
         self.y_train, self.y_test = self.preparator.y_train, self.preparator.y_test
 
         if grid_search:
-            self.best_params = self.grid_search(test_from_date, kernel, C, degree, coef0)
+            self.best_params, self.cv_results = self.grid_search(train_from_date=train_from_date, test_from_date=test_from_date, kernel=kernel, C=C, degree=degree, coef0=coef0)
         else:
             self.best_params = best_params
-            self.prediction, self.duration = self.multistep_forecast(test_from_date=test_from_date,
+            self.prediction, self.duration = self.multistep_forecast(train_from_date=train_from_date, test_from_date=test_from_date,
                                                                      test_to_date=test_to_date,
                                                                      horizon=horizon, best_params=self.best_params)
 
@@ -34,35 +34,34 @@ class SVRModel:
     def read_config():
         with open("config.toml", mode="rb") as fp:
             config = tomli.load(fp)
-        attribute_, test_from_date_, test_to_date_ = config["attribute"], config["test_from_date"], config[
+        attribute_, train_from_date_, test_from_date_, test_to_date_ = config["attribute"], config["train_from_date"], config["test_from_date"], config[
             "test_to_date"]
         kernel_ = tuple(config["svr"]["kernel"])
         C_ = tuple(config["svr"]["c"])
         degree_ = tuple(config["svr"]["degree"])
         coef0_ = tuple(config["svr"]["coef0"])
         best_params_ = config["svr"]["best_params"]
-        return attribute_, test_from_date_, test_to_date_, kernel_, C_, degree_, coef0_, best_params_
+        return attribute_, train_from_date_, test_from_date_, test_to_date_, kernel_, C_, degree_, coef0_, best_params_
 
-    def grid_search(self, test_from_date, kernel, C, degree, coef0):
+    def grid_search(self, train_from_date, test_from_date, kernel, C, degree, coef0):
         start = datetime.now()
         print("SVR Grid search started")
         hyperparameters = dict(kernel=kernel, C=C, degree=degree, coef0=coef0)
-        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date=test_from_date)
-        model = SVR(verbose=True)  # verbose=True
-        cv = [(slice(None), slice(None))]
-        rs = GridSearchCV(model, param_grid=hyperparameters, cv=cv, n_jobs=-1)
+        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date=test_from_date, train_from_date=train_from_date)
+        model = SVR()  # verbose=True
+     #   cv = [(slice(None), slice(None))]
+        rs = GridSearchCV(model, param_grid=hyperparameters, n_jobs=-1, verbose=3)
         rs.fit(x_train, y_train.ravel())
         self.print_end(start, "Total duration of SVR grid search: ")
-        return rs.best_params_
+        return rs.best_params_, rs.cv_results_
 
-    def fit_and_predict(self, test_from_date, horizon, best_params):
+    def fit_and_predict(self, train_from_date, test_from_date, horizon, best_params):
         start = datetime.now()
-        print("SVR fit and predict, test_from_date={}, horizon={}, best_params={}".format(test_from_date, horizon,
+        print("SVR fit and predict, train_from_date={}, test_from_date={}, horizon={}, best_params={}".format(train_from_date, test_from_date, horizon,
                                                                                           best_params))
-        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date=test_from_date)
+        x_train, x_test, y_train, y_test = self.preparator.get_scaled_data(test_from_date=test_from_date, train_from_date=train_from_date)
         model = SVR(kernel=best_params["kernel"], C=best_params["C"], degree=best_params["degree"],
-                    coef0=best_params["coef0"], max_iter=-1, shrinking=True,
-                    tol=0.001)  # verbose=True
+                    coef0=best_params["coef0"], max_iter=-1, shrinking=True, tol=0.001)  # verbose=True
         #   model = SVR(C=10, cache_size=200, coef0=0.0, degree=3, epsilon=0.05, gamma=0.5, kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=True)
         model = model.fit(x_train, y_train.ravel())
         prediction = model.predict(x_test[:horizon])
@@ -70,12 +69,12 @@ class SVRModel:
         self.print_end(start, "Duration: ")
         return inverse_scaled_prediction.ravel()
 
-    def multistep_forecast(self, test_from_date, test_to_date, horizon, best_params):
+    def multistep_forecast(self, train_from_date, test_from_date, test_to_date, horizon, best_params):
         start = datetime.now()
         date_range = pd.date_range(test_from_date, test_to_date, freq=str(horizon) + "H")
         prediction = []
         for date in date_range:
-            prediction = np.append(prediction, self.fit_and_predict(test_from_date=date, horizon=horizon,
+            prediction = np.append(prediction, self.fit_and_predict(train_from_date=train_from_date, test_from_date=date, horizon=horizon,
                                                                     best_params=best_params))
         duration = self.print_end(start, "Total duration of SVR multistep forecast: ")
         return self.format_prediction(prediction), duration
