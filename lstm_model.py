@@ -143,7 +143,7 @@ class LSTMModel:
                             callbacks=my_callbacks,
                             verbose=1, shuffle=False, validation_data=(x_test, y_test))
         self.plot_loss(history, file_path, horizon)
-        self.save_model(model, file_path, horizon, start)
+        self.save_model(model, file_path, horizon)
         predictions = []
         for x in x_test:
             pred = model.predict(np.reshape(x, (1, x_test.shape[1], x_test.shape[2])))
@@ -178,15 +178,16 @@ class LSTMModel:
         return prediction
 
     @staticmethod
-    def save_model(model, file_path, horizon, start):
+    def save_model(model, file_path, horizon):
+        time = datetime.now().strftime("%H%M%S")
         file_path = file_path[0] + "/models-i" + str(file_path[1]) + "/LSTM-" + str(horizon) + "h/model"
-        model.save(file_path + "/model" + str(start) + ".h5")
+        model.save(file_path + "/model" + str(time) + ".h5")
 
     @staticmethod
     def plot_loss(history, file_path, horizon):
         file_path = file_path[0] + "/models-i" + str(file_path[1]) + "/LSTM-" + str(horizon) + "h/loss_plots"
         Path(file_path).mkdir(parents=True, exist_ok=True)
-        time = datetime.now().strftime("%H-%M-%S")
+        time = datetime.now().strftime("%H%M%S")
         plt.figure()
         plt.plot(history.history['loss'], label='training loss')
         plt.plot(history.history['val_loss'], label='validation loss')
@@ -195,6 +196,4 @@ class LSTMModel:
         plt.xlabel('Epochs')
         plt.legend()
         plt.savefig(file_path + "/loss_" + time + ".png")
-#  plt.show()
-
-# lstm = LSTMModel("solar_absolute", test_from_date="2020-01-10 00:00", test_to_date="2020-01-11 00:00", horizon=12)
+        #  plt.show()

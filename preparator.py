@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+from sklearn.preprocessing import OneHotEncoder
 
 
 class Preparator:
@@ -31,8 +32,8 @@ class Preparator:
         master_df.index = pd.DatetimeIndex(master_df.index)
         return master_df[from_date:to_date].loc[:, attribute]
 
-    @staticmethod
-    def load_weather_data(attribute, from_date="2020-01-01 00:00", to_date="2022-02-28 23:00"):
+
+    def load_weather_data(self, attribute, from_date="2020-01-01 00:00", to_date="2022-02-28 23:00"):
         radiation_data = pd.read_csv("56.21830411660761_10.146653736350844_Solcast_PT60M.csv",
                                      parse_dates=["PeriodEnd"], index_col="PeriodEnd")
         weather_data = pd.read_csv("historical-weather.csv", parse_dates=["dt_iso"], index_col="dt_iso")
@@ -44,16 +45,30 @@ class Preparator:
         weather_df.index = radiation_data.index
         weather_df = weather_df.assign(irrad=radiation_data["Ghi"])
       #  weather_df["irrad"] = radiation_data["Ghi"]
-        weather_df = weather_df.assign(hour=weather_df.index.hour)
+        hours = pd.get_dummies(weather_df.index.hour, prefix="hour")
+        hours.index = weather_df.index
+        weather_df = pd.concat([weather_df, hours], axis=1)
+
      #   weather_df["hour"] = weather_df.index.hour
-        month = weather_df.index.month
-        weather_df["season"] = (month % 12 + 3) // 3
+
+        season = (weather_df.index.month % 12 + 3) // 3
+        season = pd.get_dummies(season, prefix="season")
+        season.index = weather_df.index
+        weather_df = pd.concat([weather_df, season], axis=1)
+
         if attribute == "demand_absolute":
-            weather_df = weather_df.assign(dayofweek=weather_df.index.dayofweek)
-        #    weather_df["dayofweek"] = weather_df.index.dayofweek
+            dayofweek = pd.get_dummies(weather_df.index.dayofweek, prefix="dayofweek")
+            dayofweek.index = weather_df.index
+            weather_df = pd.concat([weather_df, dayofweek], axis=1)
         #    weather_df["isweekend"] = weather_df.index.dayofweek > 4
         #    weather_df["isweekend"] = weather_df["isweekend"].astype(int)
         return weather_df
+
+    @staticmethod
+    def one_hot_encoder(array):
+        encoder = OneHotEncoder()
+        return encoder.fit_transform(array)
+
 
     @staticmethod
     def scaler(train, test):

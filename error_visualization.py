@@ -2,10 +2,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import deepdish as dd
-import seaborn as sns
-
+import tomli
 
 def load_training_data(parent_folder, model_name, horizon):
+
+
     predictions = []
     individual_error_scores = []
     overall_error_scores = []
@@ -25,7 +26,10 @@ def load_training_data(parent_folder, model_name, horizon):
     return predictions, individual_error_scores, overall_error_scores, std_error
 
 
-def load_grid_search_data(parent_folder, model_name, horizon):
+def load_grid_search_results(parent_folder, model_name, horizon):
+    with open(parent_folder + "/config.toml", mode="rb") as fp:
+        config = tomli.load(fp)
+ #   horizon = config["horizon"]
     best_params = []
     cv_results = []
     param_grid = []
@@ -36,7 +40,7 @@ def load_grid_search_data(parent_folder, model_name, horizon):
         cv_results.append(dd.io.load(path + "/cv_results.h5"))
         param_grid.append(dd.io.load(path + "/param_grid.h5"))
         best_score.append(dd.io.load(path + "/best_score.h5"))
-    return best_params, cv_results, param_grid, best_score
+    return best_params, cv_results, param_grid, best_score, horizon
 
 
 def plot_individual_score_exp3(lstm_predictions, lstm_individual_score, lstm_std_error):
@@ -61,51 +65,31 @@ def plot_individual_score_exp3(lstm_predictions, lstm_individual_score, lstm_std
     plt.show()
 
 
-def plot_overall_score_exp1(lstm_overall_scores, lstm_std_error):
+def plot_overall_score_exp1(scores, std_error, horizon):
+    x_labels = []
+    for h in horizon:
+        x_labels.append(str(h)+"h")
     fig, ax = plt.subplots()
-    for i, c in zip(range(0, 1), ["red", "blue", "green"]):
-        error = lstm_std_error[i].loc["rmse"].item()
+    for i, c in zip(range(0, 1), ["red", "blue", "green", "orange", "magenta"]):
+        error = std_error[i].loc["rmse"].item()
         #  lstm_predictions[i].plot(use_index=True, ax=ax)
         #    lstm_individual_score[i]["rmse"].plot(use_index=True, ax=ax, color=c)
-        ax.errorbar(x=["12h"], y=lstm_overall_scores[i]["rmse"], yerr=error, color=c, fmt='o', capsize=10)
+        ax.errorbar(x=x_labels, y=scores[i]["rmse"], yerr=error, color=c, fmt='o', capsize=10)
     #    ax.errorbar(x=lstm_predictions[i].index, y=lstm_predictions[i].iloc[:,0], yerr=error, errorevery=(3 * i, 22), color=c, fmt='-')
 
     ax.legend(["error1", "error2", "error3"])
-    ax.set_ylabel("RMSE [Wh]")
+    ax.set_ylabel("R-squared")
     ax.set_xlabel("Time")
     ax.grid(True, which='both')
     plt.show()
 
-
-def plot_grid_search_cv(svr_cv_results):
-    # create df of model scores ordered by performance
-    svr_cv_results = pd.DataFrame(svr_cv_results)
-    model_scores = svr_cv_results.filter(regex=r"split\d*_test_score")
-
-    # plot 30 examples of dependency between cv fold and AUC scores
-    fig, ax = plt.subplots()
-    sns.lineplot(
-        data=model_scores.transpose().iloc[:30],
-        dashes=False,
-        palette="Set1",
-        marker="o",
-        alpha=0.5,
-        ax=ax,
-    )
-    ax.set_xlabel("CV test fold", size=12, labelpad=10)
-    ax.set_ylabel("Model AUC", size=12)
-    ax.tick_params(bottom=True, labelbottom=False)
-    plt.show()
-
-    # print correlation of AUC scores across folds
-    print(f"Correlation of models:\n {model_scores.transpose().corr()}")
 
 
 # source: https://stackoverflow.com/questions/37161563/how-to-graph-grid-scores-from-gridsearchcv
 # For plotting the results when tuning several hyperparameters, what I did was fixed all parameters to their best value
 # except for one and plotted the mean score for the other parameter for each of its values.
 #
-def plot_search_results(results, param_grid, best_params):
+def plot_grid_search_results(results, param_grid, best_params):
     mean_test = results['mean_test_score']
     std_test = results['std_test_score']
     mean_train = results['mean_train_score']
@@ -140,12 +124,34 @@ def plot_search_results(results, param_grid, best_params):
     plt.legend()
     plt.show()
 
+def plot_grid_search_best_scores(scores, horizon):
+    x_labels = []
+    for h in horizon:
+        x_labels.append(str(h)+"h")
+    fig, ax = plt.subplots()
+    ax.errorbar(x=x_labels, y=scores, color="red", fmt='--o')
+
+#    ax.legend(["error1", "error2", "error3"])
+    ax.set_ylabel("R-squared")
+    ax.set_xlabel("Forecast horizon")
+    ax.grid(True, which='both')
+    plt.show()
+
+
 
 parent_folder = "12-15--00-12_svr_grid"
 horizon = [6]
+svr = "SVR"
+lstm = "LSTM"
 
-svr_best_params, svr_cv_results, svr_param_grid, svr_best_score = load_grid_search_data(parent_folder, "SVR", horizon)
-plot_search_results(svr_cv_results[0], svr_param_grid[0], svr_best_params[0])
+svr_best_params, svr_cv_results, svr_param_grid, svr_best_score, svr_horizon = load_grid_search_results(parent_folder, svr, horizon)
+plot_grid_search_results(svr_cv_results[0], svr_param_grid[0], svr_best_params[0])
+plot_grid_search_best_scores(svr_best_score, horizon)
+
+parent_folder = "12-15--15-39"
+svr2_bp, svr2_cv_res, svr2_pg, svr2_bs, svr2_hor = load_grid_search_results(parent_folder, svr, horizon)
+plot_grid_search_results(svr2_cv_res[0], svr2_pg[0], svr2_bp[0])
+plot_grid_search_best_scores(svr2_bs, horizon)
 
 # %%
 lstm_predictions, lstm_individual_error, lstm_overall_error, lstm_std_error = load_training_data(parent_folder, "LSTM",

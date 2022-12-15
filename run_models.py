@@ -34,12 +34,12 @@ if __name__ == '__main__':
 
     for i in range(1, 5):
         for h in horizon:
-     #       svr = SVRModel(horizon=h, grid_search=False)
-     #       save_results(date, config, svr, "SVR", h, i)
-            lstm = LSTMModel(horizon=h, file_path=[date, i], grid_search=False)
-            save_results(date, config, lstm, "LSTM", h, i)
-     #       arima = ArimaModel(horizon=h, grid_search=False)
-     #       save_results(date, config, arima, "ARIMA", h, i)
+      #      svr = SVRModel(horizon=h, file_path=[date, i], grid_search=False)
+      #      save_results(date, config, svr, "SVR", h, i)
+     #       lstm = LSTMModel(horizon=h, file_path=[date, i], grid_search=False)
+     #       save_results(date, config, lstm, "LSTM", h, i)
+            arima = ArimaModel(horizon=h, grid_search=False)
+            save_results(date, config, arima, "ARIMA", h, i)
 
     print("End.")
 
