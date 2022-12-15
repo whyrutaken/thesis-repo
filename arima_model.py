@@ -1,4 +1,5 @@
 # %%
+#!/usr/bin/env python3
 from datetime import datetime
 import pandas as pd
 from statsmodels.tsa.arima.model import ARIMA
@@ -9,12 +10,13 @@ from error_metric_calculator import Metrics
 import tomli
 
 
+
 class ArimaModel:
 
     def __init__(self, horizon: int, grid_search: bool):
         # hyperparameters
         attribute, train_from_date, test_from_date, test_to_date, p_values, q_values, d_values, best_params = self.read_config()
-        self.preparator = Preparator(attribute, test_from_date)
+        self.preparator = Preparator(attribute, train_from_date=train_from_date, test_from_date=test_from_date)
         self.train, self.test = self.preparator.train_test_split_by_date(self.preparator.historical_df,
                                                                          test_from_date=test_from_date)
         if grid_search:
@@ -39,6 +41,7 @@ class ArimaModel:
         d_values_ = tuple(config["arima"]["d"])
         best_params_ = tuple(config["arima"]["best_params"])
         return attribute_, train_from_date_, test_from_date_, test_to_date_, p_values_, q_values_, d_values_, best_params_
+
 
     def fit_and_predict(self, df, train_from_date, test_from_date, horizon, best_params):
         start = datetime.now()

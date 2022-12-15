@@ -5,17 +5,17 @@ import numpy as np
 
 
 class Preparator:
-    def __init__(self, attribute, test_from_date):
+    def __init__(self, attribute, train_from_date, test_from_date):
         self.scaler_x = 0
         self.scaler_y = 0
         self.historical_df = self.load_historical_data(attribute)
         self.weather_df = self.load_weather_data(attribute)
-        self.x_train, self.x_test = self.train_test_split_by_date(self.weather_df, test_from_date=test_from_date)
-        self.y_train, self.y_test = self.train_test_split_by_date(self.historical_df, test_from_date=test_from_date)
+        self.x_train, self.x_test = self.train_test_split_by_date(self.weather_df, test_from_date=test_from_date, train_from_date=train_from_date)
+        self.y_train, self.y_test = self.train_test_split_by_date(self.historical_df, test_from_date=test_from_date, train_from_date=train_from_date)
 
     def get_scaled_data(self, test_from_date, train_from_date="2020-01-01 00:00"):
-        x_train, x_test = self.train_test_split_by_date(self.weather_df, test_from_date=test_from_date)
-        y_train, y_test = self.train_test_split_by_date(self.historical_df, test_from_date=test_from_date)
+        x_train, x_test = self.train_test_split_by_date(self.weather_df, test_from_date=test_from_date, train_from_date=train_from_date)
+        y_train, y_test = self.train_test_split_by_date(self.historical_df, test_from_date=test_from_date, train_from_date=train_from_date)
         y_train = np.asarray(y_train).reshape(-1, 1)
         y_test = np.asarray(y_test).reshape(-1, 1)
         self.scaler_x, x_train, x_test = self.scaler(x_train, x_test)
@@ -42,12 +42,17 @@ class Preparator:
         weather_data = weather_data.iloc[:len(radiation_data)]
         weather_df = weather_data[["temp", "humidity", "pressure", "wind_speed", "clouds_all"]]
         weather_df.index = radiation_data.index
-        weather_df["irrad"] = radiation_data["Ghi"]
-        weather_df["hour"] = weather_df.index.hour
-        weather_df["season"] = (weather_df.index.month % 12 + 3) // 3
+        weather_df = weather_df.assign(irrad=radiation_data["Ghi"])
+      #  weather_df["irrad"] = radiation_data["Ghi"]
+        weather_df = weather_df.assign(hour=weather_df.index.hour)
+     #   weather_df["hour"] = weather_df.index.hour
+        month = weather_df.index.month
+        weather_df["season"] = (month % 12 + 3) // 3
         if attribute == "demand_absolute":
-            weather_df["isweekend"] = weather_df.index.dayofweek > 4
-            weather_df["isweekend"] = weather_df["isweekend"].astype(int)
+            weather_df = weather_df.assign(dayofweek=weather_df.index.dayofweek)
+        #    weather_df["dayofweek"] = weather_df.index.dayofweek
+        #    weather_df["isweekend"] = weather_df.index.dayofweek > 4
+        #    weather_df["isweekend"] = weather_df["isweekend"].astype(int)
         return weather_df
 
     @staticmethod
@@ -78,4 +83,4 @@ class Preparator:
         return train, test
 
 
-#preparator = Preparator("solar_absolute", "2022-01-01")
+preparator = Preparator("demand_absolute", "2020-01-01", "2022-01-01")
