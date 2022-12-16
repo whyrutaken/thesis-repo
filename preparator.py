@@ -44,12 +44,11 @@ class Preparator:
         weather_df = weather_data[["temp", "humidity", "pressure", "wind_speed", "clouds_all"]]
         weather_df.index = radiation_data.index
         weather_df = weather_df.assign(irrad=radiation_data["Ghi"])
-      #  weather_df["irrad"] = radiation_data["Ghi"]
-        hours = pd.get_dummies(weather_df.index.hour, prefix="hour")
-        hours.index = weather_df.index
-        weather_df = pd.concat([weather_df, hours], axis=1)
-
-     #   weather_df["hour"] = weather_df.index.hour
+        weather_df = weather_df.assign(hour=weather_df.index.hour)
+        # one-hot encoded hours
+     #   hours = pd.get_dummies(weather_df.index.hour, prefix="hour")
+     #   hours.index = weather_df.index
+     #   weather_df = pd.concat([weather_df, hours], axis=1)
 
         season = (weather_df.index.month % 12 + 3) // 3
         season = pd.get_dummies(season, prefix="season")

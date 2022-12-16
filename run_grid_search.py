@@ -38,7 +38,7 @@ if __name__ == '__main__':
         save_results(date, h, "LSTM", lstm_gs.best_params, lstm_gs.cv_results, lstm_gs.param_grid, lstm_gs.best_score, config)
                  #     arima_gs = ArimaModel(horizon=h, grid_search=True)
                  #     save_results(date, h, "ARIMA", arima_gs.best_params, "", config)
-                 #    svr_gs = SVRModel(horizon=h, file_path=[""], grid_search=True)
-                 #   save_results(date, h, "SVR", svr_gs.best_params, svr_gs.cv_results, svr_gs.param_grid, svr_gs.best_score, config)
+        #svr_gs = SVRModel(horizon=h, file_path=[""], grid_search=True)
+        #save_results(date, h, "SVR", svr_gs.best_params, svr_gs.cv_results, svr_gs.param_grid, svr_gs.best_score, config)
 
         print("End.")
