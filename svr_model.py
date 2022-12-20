@@ -1,5 +1,6 @@
 from datetime import datetime
 import pandas as pd
+from sklearn.metrics import make_scorer, r2_score
 from sklearn.model_selection import GridSearchCV
 from preparator import Preparator
 from sklearn.svm import SVR
@@ -12,9 +13,9 @@ from pathlib2 import Path
 
 
 class SVRModel:
-    def __init__(self, horizon: int, file_path: list, grid_search: bool):
+    def __init__(self, config, horizon: int, file_path: list, grid_search: bool):
         # hyperparameters
-        attribute, train_from_date, test_from_date, test_to_date, kernel, C, degree, gamma, best_params = self.read_config()
+        attribute, train_from_date, test_from_date, test_to_date, kernel, C, degree, gamma, best_params = self.read_config(config)
         self.preparator = Preparator(attribute, train_from_date=train_from_date, test_from_date=test_from_date)
         self.y_train, self.y_test = self.preparator.y_train, self.preparator.y_test
 
@@ -38,9 +39,7 @@ class SVRModel:
     #   printer.print_single_forecast(self.y_train, self.y_test, self.prediction)
 
     @staticmethod
-    def read_config():
-        with open("config.toml", mode="rb") as fp:
-            config = tomli.load(fp)
+    def read_config(config):
         attribute_, train_from_date_, test_from_date_, test_to_date_ = config["attribute"], config["train_from_date"], \
                                                                        config["test_from_date"], config[
                                                                            "test_to_date"]
@@ -59,7 +58,8 @@ class SVRModel:
                                                                            train_from_date=train_from_date)
         model = SVR()
         cv = TimeSeriesSplit()
-        rs = GridSearchCV(model, param_grid=hyperparameters, n_jobs=-1, verbose=3, return_train_score=True, cv=cv)
+        scoring = make_scorer(r2_score)
+        rs = GridSearchCV(model, param_grid=hyperparameters, n_jobs=-1, verbose=3, return_train_score=True, cv=cv, scoring=scoring)
         rs.fit(x_train, y_train.ravel())
         self.print_end(start, "Total duration of SVR grid search: ")
         return rs.best_params_, rs.cv_results_, rs.param_grid, rs.best_score_
@@ -106,10 +106,9 @@ class SVRModel:
 
     @staticmethod
     def save_model(model, file_path, horizon):
-        time = datetime.now().strftime("%H%M%S")
         file_path = file_path[0] + "/models-i" + str(file_path[1]) + "/SVR-" + str(horizon) + "h/model"
         Path(file_path).mkdir(parents=True, exist_ok=True)
-        joblib.dump(model, file_path + "/model" + str(time) + ".pkl")
+        joblib.dump(model, file_path + "/model.pkl")
 
 
 

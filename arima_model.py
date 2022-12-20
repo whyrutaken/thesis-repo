@@ -13,9 +13,9 @@ import tomli
 
 class ArimaModel:
 
-    def __init__(self, horizon: int, grid_search: bool):
+    def __init__(self, config, horizon: int, grid_search: bool):
         # hyperparameters
-        attribute, train_from_date, test_from_date, test_to_date, p_values, q_values, d_values, best_params = self.read_config()
+        attribute, train_from_date, test_from_date, test_to_date, p_values, q_values, d_values, best_params = self.read_config(config)
         self.preparator = Preparator(attribute, train_from_date=train_from_date, test_from_date=test_from_date)
         self.train, self.test = self.preparator.train_test_split_by_date(self.preparator.historical_df,
                                                                          test_from_date=test_from_date)
@@ -31,9 +31,7 @@ class ArimaModel:
             self.std_error = self.individual_error_scores.std()
 
     @staticmethod
-    def read_config():
-        with open("config.toml", mode="rb") as fp:
-            config = tomli.load(fp)
+    def read_config(config):
         attribute_, train_from_date_, test_from_date_, test_to_date_ = config["attribute"], config["train_from_date"], config["test_from_date"], config[
             "test_to_date"]
         p_values_ = tuple(config["arima"]["p"])
