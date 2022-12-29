@@ -6,7 +6,6 @@ from preparator import Preparator
 from sklearn.svm import SVR
 import numpy as np
 from error_metric_calculator import Metrics
-import tomli
 from sklearn.model_selection import TimeSeriesSplit
 import joblib
 from pathlib2 import Path

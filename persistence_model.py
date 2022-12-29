@@ -7,18 +7,30 @@ import printer
 
 
 class PersistenceModel:
-    def __init__(self, attribute, test_from_date, test_to_date):
-        self.preparator = Preparator(attribute, test_from_date)
-        self.train, self.test = self.preparator.train_test_split_by_date(self.preparator.historical_df,
-                                                                         test_from_date=test_from_date)
-        self.prediction = self.multistep_forecast(test_from_date, test_to_date)
+    def __init__(self, attribute, train_from_date, test_from_date, test_to_date):
+        self.attribute, self.train_from_date, self.test_from_date, self.test_to_date = attribute, train_from_date, test_from_date, test_to_date
+     #   self.attribute, train_from_date, test_from_date, test_to_date = self.read_config(config)
+        self.preparator = Preparator(self.attribute, train_from_date=self.train_from_date, test_from_date=self.test_from_date)
+        self.train, self.test = self.preparator.y_train, self.preparator.y_test
+        self.prediction = self.multistep_forecast(self.test_from_date, self.test_to_date)
         self.individual_scores, self.overall_scores = Metrics().calculate_errors(self.test, self.prediction)
+        self.std_error = self.individual_scores.std()
 
     @staticmethod
-    def create_lagged_dataset(df) -> pd.DataFrame:
+    def read_config(config):
+        attribute_, train_from_date_, test_from_date_, test_to_date_ = config["attribute"], config["train_from_date"], \
+                                                                       config["test_from_date"], config[
+                                                                           "test_to_date"]
+        return attribute_, train_from_date_, test_from_date_, test_to_date_
+
+    def create_lagged_dataset(self, df) -> pd.DataFrame:
         values = pd.DataFrame(df)
-        df = pd.concat([values.shift(1), values], axis=1).dropna()
-        df.columns = ['t-1', 't+1']
+        if self.attribute == "solar_absolute":
+            shift = 24
+        else:
+            shift = 168
+        df = pd.concat([values.shift(shift), values], axis=1).dropna()
+        df.columns = ['t-' + str(shift), 't+1']
         df.index = pd.DatetimeIndex(df.index)
         return df
 
@@ -47,7 +59,6 @@ class PersistenceModel:
         prediction.index = pd.DatetimeIndex(prediction.index)
         return prediction
 
-
-model = PersistenceModel("demand_absolute", "2020-06-03", "2020-06-07")
+# model = PersistenceModel("demand_absolute", "2020-06-03", "2020-06-07")
 # demand_model = PersistenceModel("demand_absolute", "2021-12-30", "2022-01-04")
-printer.print_single_forecast(model.train, model.test, model.prediction)
+# printer.print_single_forecast(model.train, model.test, model.prediction)

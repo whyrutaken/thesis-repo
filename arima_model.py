@@ -51,8 +51,8 @@ class ArimaModel:
         model = model.fit()
         #     self.plot_model_details(fitted_model)
         prediction = model.forecast(horizon)
-        self.print_end(start, "Duration: ")
-        return prediction
+        duration = self.print_end(start, "Duration: ")
+        return prediction, duration
 
     def grid_search(self, df, train_from_date, test_from_date, horizon, p_values, q_values, d_values):
         start = datetime.now()
@@ -76,11 +76,12 @@ class ArimaModel:
         start = datetime.now()
         date_range = pd.date_range(test_from_date, test_to_date, freq=str(horizon) + "H")
         prediction = []
+        duration = []
         for date in date_range:
-            prediction = np.append(prediction,
-                                   self.fit_and_predict(df=self.preparator, train_from_date=train_from_date, test_from_date=date, horizon=horizon,
-                                                        best_params=best_params))
-        duration = self.print_end(start, "Total duration of ARIMA multistep forecast: ")
+            pred, dur = self.fit_and_predict(df=self.preparator, train_from_date=train_from_date, test_from_date=date, horizon=horizon, best_params=best_params)
+            prediction = np.append(prediction, pred)
+            duration.append(dur)
+        self.print_end(start, "Total duration of ARIMA multistep forecast: ")
         return self.format_prediction(prediction, self.test), duration
 
     @staticmethod

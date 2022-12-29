@@ -32,17 +32,20 @@ if __name__ == '__main__':
         config = tomli.load(fp)
     horizon = config["horizon"]
 
-    for i in range(1, 5):
-        for h in horizon:
+   # for i in range(1, 5):
+ #   for h in horizon:
+    h = 6
+    i=1
+    svr = SVRModel(config, horizon=h, file_path=[date, i], grid_search=False)
+    save_results(date, config, svr, "SVR", h, i)
+     #   lstm = LSTMModel(config, horizon=h, file_path=[date, i], grid_search=False, architecture=1)
+     #   save_results(date, config, lstm, "LSTM1", h, i)
+     #   lstm = LSTMModel(config, horizon=h, file_path=[date, i], grid_search=False, architecture=2)
+    #    save_results(date, config, lstm, "LSTM2", h, i)
+    #    arima = ArimaModel(config, horizon=h, grid_search=False)
+     #   save_results(date, config, arima, "ARIMA", h, "")
 
-      #      svr = SVRModel(config, horizon=h, file_path=[date, i], grid_search=False)
-       #     save_results(date, config, svr, "SVR", h, i)
-            lstm = LSTMModel(config, horizon=h, file_path=[date, i], grid_search=False)
-            save_results(date, config, lstm, "LSTM", h, i)
-      #      arima = ArimaModel(config, horizon=h, grid_search=False)
-      #      save_results(date, config, arima, "ARIMA", h, i)
-
-    print("End.")
+print("End.")
 
 # %%
 #  lstm = LSTMModel(attribute, test_from_date, test_to_date, horizon)

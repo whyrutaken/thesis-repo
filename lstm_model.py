@@ -5,6 +5,7 @@ from keras.callbacks import EarlyStopping
 from keras.layers import LSTM, Dense, Dropout
 import numpy as np
 from keras.losses import mean_squared_error
+from keras.optimizer_v1 import Adam
 from keras.utils.vis_utils import plot_model
 from keras.wrappers.scikit_learn import KerasRegressor
 from keras_tuner import RandomSearch
@@ -20,9 +21,11 @@ import tomli
 import tensorflow as tf
 import atexit
 
+
 class LSTMModel:
-    def __init__(self, config, horizon: int, file_path: list, grid_search: bool):
+    def __init__(self, config, horizon: int, file_path: list, grid_search: bool, architecture: int):
         # hyperparameters
+        self.architecture = architecture
         attribute, train_from_date, test_from_date, test_to_date,  hidden_unit, activation, batch_size, epochs, best_params = self.read_config(config)
         self.preparator = Preparator(attribute, train_from_date=train_from_date, test_from_date=test_from_date)
 
@@ -30,7 +33,7 @@ class LSTMModel:
             self.best_params, self.cv_results, self.param_grid, self.best_score = self.grid_search(train_from_date=train_from_date,
                                                                                                    test_from_date=test_from_date,
                                                                                                    horizon=horizon,
-                                                                                                   build_model=self.lstm1,
+                                                                                                   build_model=self.lstm2,
                                                                                                    hidden_unit=hidden_unit,
                                                                                                    activation=activation, epochs=epochs,
                                                                                                    batch_size=batch_size)
@@ -40,7 +43,7 @@ class LSTMModel:
                                                                      test_from_date=test_from_date,
                                                                      test_to_date=test_to_date, horizon=horizon,
                                                                      file_path=file_path,
-                                                                     best_params=best_params)
+                                                                     best_params=best_params, architecture=architecture)
 
             self.individual_error_scores, self.overall_error_scores = Metrics().calculate_errors(
                 self.preparator.y_test[horizon:], self.prediction)
@@ -80,15 +83,15 @@ class LSTMModel:
 
     @staticmethod
     def lstm1(hidden_unit, input_shape, activation):
-        mirrored_strategy = tf.distribute.MirroredStrategy()
-        with mirrored_strategy.scope():
-            model = Sequential()
-            model.add(LSTM(hidden_unit, input_shape=input_shape, activation=activation,
+  #      mirrored_strategy = tf.distribute.MirroredStrategy()
+   #     with mirrored_strategy.scope():
+        model = Sequential()
+        model.add(LSTM(hidden_unit, input_shape=input_shape, activation=activation,
                            return_sequences=False))
-            model.add(Dense(hidden_unit))
-            model.add(Dense(1))
-            model.compile(loss='mse', optimizer='adam')
-            atexit.register(mirrored_strategy._extended._collective_ops._pool.close)  # type: ignore
+        model.add(Dense(hidden_unit))
+        model.add(Dense(1))
+        model.compile(loss='mse', optimizer='adam')
+   #         atexit.register(mirrored_strategy._extended._collective_ops._pool.close)  # type: ignore
         model.summary()
   #      plot_model(model, to_file='lstm1_architecture.png', show_shapes=False, show_layer_names=True)
 
@@ -96,23 +99,24 @@ class LSTMModel:
 
     @staticmethod
     def lstm2(hidden_unit, dropout, input_shape, activation):
-        mirrored_strategy = tf.distribute.MirroredStrategy()
-        with mirrored_strategy.scope():
-            model = Sequential()
-            model.add(LSTM(64, input_shape=input_shape, activation=activation,
+   #     mirrored_strategy = tf.distribute.MirroredStrategy()
+   #     with mirrored_strategy.scope():
+        model = Sequential()
+        model.add(LSTM(64, input_shape=input_shape, activation=activation,
                            return_sequences=True))
-            model.add(LSTM(hidden_unit, activation=activation, return_sequences=True, dropout=dropout))
-            model.add(LSTM(hidden_unit, activation=activation, return_sequences=False, dropout=dropout))
-            model.add(Dense(32))
-            model.add(Dense(1))
-            model.compile(loss='mse', optimizer='adam')
+        model.add(LSTM(hidden_unit, activation=activation, return_sequences=True, dropout=dropout))
+        model.add(LSTM(hidden_unit, activation=activation, return_sequences=False, dropout=dropout))
+        model.add(Dense(32))
+        model.add(Dense(1))
+        model.compile(loss='mse', optimizer='adam')
+  #          atexit.register(mirrored_strategy._extended._collective_ops._pool.close)  # type: ignore
         model.summary()
    #     plot_model(model, to_file='lstm2_architecture.png', show_shapes=False, show_layer_names=True)
         return model
 
     @staticmethod
     def set_callbacks():
-        early_stopper = EarlyStopping(monitor='val_loss', patience=10, mode="min", restore_best_weights=True, verbose=2)
+        early_stopper = EarlyStopping(monitor='val_loss', patience=20, mode="min", restore_best_weights=True, verbose=2)
         return early_stopper
 
     def grid_search(self, train_from_date, test_from_date, horizon, build_model, hidden_unit, activation,
@@ -126,7 +130,8 @@ class LSTMModel:
         model = KerasRegressor(
             build_fn=build_model, input_shape=input_shape
         )
-        hyperparameters = dict(hidden_unit=hidden_unit, batch_size=batch_size, epochs=epochs, activation=activation)
+        dropout = (0, 0.2)
+        hyperparameters = dict(hidden_unit=hidden_unit, batch_size=batch_size, epochs=epochs, activation=activation, dropout=dropout)
         cv = TimeSeriesSplit()
         scoring = make_scorer(r2_score)
         rs = GridSearchCV(estimator=model, param_grid=hyperparameters, verbose=1, return_train_score=True, cv=cv, scoring=scoring) # n_jobs=-1,
@@ -135,7 +140,7 @@ class LSTMModel:
         self.print_end(start, "Total duration of LSTM grid search: ")
         return rs.best_params_, rs.cv_results_, rs.param_grid, rs.best_score_
 
-    def fit_and_predict(self, train_from_date, test_from_date, horizon, best_params, file_path):
+    def fit_and_predict(self, train_from_date, test_from_date, horizon, best_params, file_path, architecture):
         start = datetime.now()
         print("LSTM fit and predict, train_from_date={}, test_from_date={}, horizon={}, best_params={}".format(
             train_from_date, test_from_date, horizon, best_params))
@@ -143,7 +148,10 @@ class LSTMModel:
                                                            train_from_date=train_from_date, horizon=horizon)
         input_shape = (x_train.shape[1], x_train.shape[2])
         my_callbacks = self.set_callbacks()
-        model = self.lstm1(best_params["hidden_unit"],  input_shape, best_params["activation"]) #best_params["dropout"],
+        if architecture == 1:
+            model = self.lstm1(best_params["hidden_unit"],  input_shape, best_params["activation"]) #best_params["dropout"],
+        else:
+            model = self.lstm2(best_params["hidden_unit"],0, input_shape, best_params["activation"])
 
         history = model.fit(x_train, y_train, epochs=best_params["epochs"], batch_size=best_params["batch_size"],
                             callbacks=my_callbacks, verbose=1, shuffle=False, validation_split=0.15)
@@ -155,16 +163,16 @@ class LSTMModel:
             predictions.append(inverse_scaled_pred.ravel())
 
         self.print_end(start, "Duration: ")
-        return predictions
+        return predictions, model
 
-    def multistep_forecast(self, train_from_date, test_from_date, test_to_date, horizon, file_path, best_params):
+    def multistep_forecast(self, train_from_date, test_from_date, test_to_date, horizon, file_path, best_params, architecture):
         start = datetime.now()
         date_range = pd.date_range(test_from_date, test_to_date, freq=str(horizon) + "H")
         predictions = []
         model = None
         for date in date_range:
             pred, model = self.fit_and_predict(train_from_date=train_from_date, test_from_date=date,
-                                                         horizon=horizon, best_params=best_params, file_path=file_path)
+                                                         horizon=horizon, best_params=best_params, file_path=file_path, architecture=architecture)
             predictions = np.append(predictions, pred)
         duration = self.print_end(start, "Total duration of LSTM multistep forecast: ")
         self.save_model(model, file_path, horizon)
@@ -183,14 +191,18 @@ class LSTMModel:
         prediction.index = pd.DatetimeIndex(prediction.index)
         return prediction
 
-    @staticmethod
-    def save_model(model, file_path, horizon):
-        file_path = file_path[0] + "/models-i" + str(file_path[1]) + "/LSTM-" + str(horizon) + "h/model"
+    def save_model(self, model, file_path, horizon):
+        if self.architecture == 1:
+            file_path = file_path[0] + "/models-i" + str(file_path[1]) + "/LSTM1-" + str(horizon) + "h/model"
+        else:
+            file_path = file_path[0] + "/models-i" + str(file_path[1]) + "/LSTM2-" + str(horizon) + "h/model"
         model.save(file_path + "/model.h5")
 
-    @staticmethod
-    def plot_loss(history, file_path, horizon):
-        file_path = file_path[0] + "/models-i" + str(file_path[1]) + "/LSTM-" + str(horizon) + "h/loss_plots"
+    def plot_loss(self, history, file_path, horizon):
+        if self.architecture == 1:
+            file_path = file_path[0] + "/models-i" + str(file_path[1]) + "/LSTM1-" + str(horizon) + "h/loss_plots"
+        else:
+            file_path = file_path[0] + "/models-i" + str(file_path[1]) + "/LSTM2-" + str(horizon) + "h/loss_plots"
         Path(file_path).mkdir(parents=True, exist_ok=True)
         time = datetime.now().strftime("%H%M%S")
         plt.figure()
