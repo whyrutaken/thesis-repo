@@ -1,9 +1,10 @@
 # Repository of the AU Master's Thesis: Building Energy Production and Consumption Forecasting
 
 Summary of files:
-  \ preprocessor.py
+```
+  - preprocessor.py
       Class for preprocessing the intial data
-  \ statistics.py
+  - statistics.py
       Class for calculating the statistics presented in Section 4.3.2: Descriptive Statistics
   \ exploratory_visualization.py
       Script to make the plots presented in Section 4.3.1: Data Visualization
@@ -30,7 +31,7 @@ Summary of files:
   \ baseline_model_evaluation.py
   \ gridsearch_result_evaluation.py
   \ final_model_evlauation.py
-  
+  ```
   
   
 
