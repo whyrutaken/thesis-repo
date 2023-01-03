@@ -1,4 +1,7 @@
-#%%
+#####
+#   Script for configuring the ARIMA model orders
+
+
 import pandas as pd
 from statsmodels.tsa.arima.model import ARIMA
 from matplotlib import pyplot as plt

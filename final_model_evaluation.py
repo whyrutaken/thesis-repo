@@ -1,3 +1,7 @@
+#####
+#   Script for plotting and comparing the final results of the models
+#
+
 from printer import *
 from preparator import Preparator
 from persistence_model import PersistenceModel
@@ -205,7 +209,7 @@ std_error = [pers_std, arima_std, svr_std, lstm1_std, lstm2_std]
 plot_best_scores_together(scores_rmse, std_error, labels, "PV power", colors, model_labels)
 plot_best_r2scores_together(scores_r2, labels, "PV power", colors, model_labels)
 
-#%%
+# %%
 # gather consumption error scores
 pers_cons_scores = [pers_cons_winter.overall_scores["rmse"][0], pers_cons_spring.overall_scores["rmse"][0],
                     pers_cons_summer.overall_scores["rmse"][0], pers_cons_autumn.overall_scores["rmse"][0]]

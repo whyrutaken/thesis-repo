@@ -1,4 +1,7 @@
-# %%
+#####
+#   Class for preprocessing the data
+#
+
 import pandas as pd
 
 

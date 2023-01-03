@@ -1,3 +1,7 @@
+#####
+#   Functions used for loading results, plotting different graphs, etc.
+#
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
@@ -6,7 +10,6 @@ import deepdish as dd
 
 
 ### Load results
-
 
 def load_model_results_with_iteration(parent_folder, model_name, horizon):
     iteration = []
@@ -28,7 +31,6 @@ def load_model_results_with_iteration(parent_folder, model_name, horizon):
                 pd.read_csv(path + "/std_error.csv", index_col=0))
         iteration.append([predictions, individual_error_scores, overall_error_scores, std_error])
     return iteration
-
 
 
 def load_model_results_without_iteration(parent_folder, model_name, horizon):
@@ -90,11 +92,11 @@ def print_double_forecast(train, test, pred1, pred2):
 def print_multi_forecast(train, test, predictions, colors, model_labels, y_label):
     fig, ax = plt.subplots(figsize=(15, 5), dpi=100)
     plt.locator_params(axis='x', nbins=5)
-    #ax.plot(train[len(train) - 24:], label='training', color="rosybrown")
-    ax.plot(test[48:72], label='training', color="rosybrown") # 48:72
-    ax.plot(test[72:120], label='actual', color="tomato", linestyle="--")  #72:240
+    # ax.plot(train[len(train) - 24:], label='training', color="rosybrown")
+    ax.plot(test[48:72], label='training', color="rosybrown")  # 48:72
+    ax.plot(test[72:120], label='actual', color="tomato", linestyle="--")  # 72:240
     for pred, mlabel, c in zip(predictions, model_labels, colors):
-        ax.plot(pred[72:120], label=mlabel, color=c, alpha=0.7)  #72:240
+        ax.plot(pred[72:120], label=mlabel, color=c, alpha=0.7)  # 72:240
     ax.legend()
     ax.set(xlabel="Time", ylabel=y_label + " [Wh]", title="Forecast vs Actual")
     ax.grid(True, which='both')
@@ -108,17 +110,12 @@ def print_multi_forecast(train, test, predictions, colors, model_labels, y_label
 def plot_individual_score_exp3(lstm_predictions, lstm_individual_score, lstm_std_error):
     fig, ax = plt.subplots()
     fig.set_size_inches(20, 8)
-    #   plt.errorbar(lstm_predictions[0], lstm_individual_score[0]["rmse"], yerr=lstm_std_error[0].loc["rmse"].item(),
-    #                fmt=".k")
-    #   plt.plot(x=lstm_predictions[0], y=lstm_individual_score[0]["rmse"])
+
     for i, c in zip(range(0, 4), ["red", "blue", "green"]):
         error = lstm_std_error[i].loc["rmse"].item()
-        #  lstm_predictions[i].plot(use_index=True, ax=ax)
-        #    lstm_individual_score[i]["rmse"].plot(use_index=True, ax=ax, color=c)
         ax.errorbar(x=lstm_individual_score[i]["rmse"].index, y=lstm_individual_score[i]["rmse"], yerr=error,
                     capsize=10,
                     errorevery=(3 * i, 22), color=c, fmt='-')
-    #    ax.errorbar(x=lstm_predictions[i].index, y=lstm_predictions[i].iloc[:,0], yerr=error, errorevery=(3 * i, 22), color=c, fmt='-')
 
     ax.legend(["error1", "error2", "error3"])
     ax.set_ylabel("RMSE [Wh]")
@@ -134,10 +131,7 @@ def plot_overall_score_exp1(scores, std_error, horizon):
     fig, ax = plt.subplots()
     for i, c in zip(range(0, 4), ["red", "blue", "green", "orange"]):
         error = std_error[i].loc["rmse"].item()
-        #  lstm_predictions[i].plot(use_index=True, ax=ax)
-        #    lstm_individual_score[i]["rmse"].plot(use_index=True, ax=ax, color=c)
         ax.errorbar(x=x_labels, y=scores[i]["rmse"], yerr=error, color=c, fmt='o', capsize=10)
-    #    ax.errorbar(x=lstm_predictions[i].index, y=lstm_predictions[i].iloc[:,0], yerr=error, errorevery=(3 * i, 22), color=c, fmt='-')
 
     ax.legend(["error1", "error2", "error3"])
     ax.set_ylabel("R-squared")
@@ -158,7 +152,7 @@ def print_error(error):
 
 def plot_best_scores(scores, std_error, x_labels, ft_type, color):
     fig, ax = plt.subplots(figsize=(7, 6))
-    fig.text(s=ft_type+" forecasting: Winter", x=0.5, y=0.92, fontsize=14,
+    fig.text(s=ft_type + " forecasting: Winter", x=0.5, y=0.92, fontsize=14,
              ha='center', va='center')
 
     ax.errorbar(x=x_labels, y=scores, yerr=std_error, color=color, fmt='--o', label='error', capsize=10)
@@ -166,14 +160,15 @@ def plot_best_scores(scores, std_error, x_labels, ft_type, color):
     ax.set_xlabel("Model type")
     ax.legend()
     ax.grid(True, which='both')
-   # ax.set_ylim(top=20000)
-  #  ax.set_ylim(bottom=-500)
+    # ax.set_ylim(top=20000)
+    #  ax.set_ylim(bottom=-500)
     #  plt.tight_layout()
     plt.show()
 
+
 def plot_best_scores_together(scores, std_error, x_labels, ft_type, colors, labels):
     fig, ax = plt.subplots(figsize=(7, 6))
-    fig.text(s=ft_type+" forecasting", x=0.5, y=0.92, fontsize=14,
+    fig.text(s=ft_type + " forecasting", x=0.5, y=0.92, fontsize=14,
              ha='center', va='center')
 
     for score, std, color, label in zip(scores, std_error, colors, labels):
@@ -182,24 +177,25 @@ def plot_best_scores_together(scores, std_error, x_labels, ft_type, colors, labe
     ax.set_xlabel("Month")
     ax.legend()
     ax.grid(True, which='both')
- #   ax.set_ylim(top=0.55)
- #   ax.set_ylim(bottom=-0.1)
+    #   ax.set_ylim(top=0.55)
+    #   ax.set_ylim(bottom=-0.1)
     #  plt.tight_layout()
     plt.show()
 
+
 def plot_best_r2scores_together(scores, x_labels, ft_type, colors, labels):
     fig, ax = plt.subplots(figsize=(7, 6))
-    fig.text(s=ft_type+" forecasting", x=0.5, y=0.92, fontsize=14,
+    fig.text(s=ft_type + " forecasting", x=0.5, y=0.92, fontsize=14,
              ha='center', va='center')
 
     for score, color, label in zip(scores, colors, labels):
-        ax.errorbar(x=x_labels, y=score,  color=color, fmt='--o', label=label, capsize=10, alpha=0.7)
+        ax.errorbar(x=x_labels, y=score, color=color, fmt='--o', label=label, capsize=10, alpha=0.7)
     ax.set_ylabel("R2", labelpad=4)
     ax.set_xlabel("Month")
     ax.legend()
     ax.grid(True, which='both')
- #   ax.set_ylim(top=0.55)
- #   ax.set_ylim(bottom=-0.1)
+    #   ax.set_ylim(top=0.55)
+    #   ax.set_ylim(bottom=-0.1)
     #  plt.tight_layout()
     plt.show()
 
@@ -276,13 +272,9 @@ def plot_grid_search_best_scores(score1, score2, score3, horizon, model, ft_type
     plt.show()
 
 
-
-
 def plot_grid_results(parent_folders, model, ft_type):
     horizon = [6, 12, 24]
-    #   horizon = [6]
     train_length = ["3mo", "6mo", "12mo"]
-    #   train_length = ["6mo"]
     results = []
     for i, ts in zip(range(len(horizon)), train_length):
         best_params, cv_results, param_grid, best_score = load_grid_search_results(parent_folders[i], model, horizon)
@@ -298,6 +290,5 @@ def plot_grid_results(parent_folders, model, ft_type):
                                                     "Training set size: " + ts + ", Forecast horizon: " + h, model,
                                                     ft_type)
     plot_grid_search_best_scores(results[0][-1], results[1][-1], results[2][-1], horizon, model, ft_type)
-    #   plot_grid_search_best_scores(results[0][-1], "", "", horizon, model, ft_type)
 
     return results

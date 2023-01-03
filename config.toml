@@ -1,0 +1,52 @@
+# Solar or demand forecast?
+attribute = "demand_absolute"
+
+# Period of expanding window testing
+# 6mo winter
+train_from_date= "2020-07-01 00:00"
+test_from_date = "2021-01-01 00:00"
+test_to_date = "2022-01-01 00:00"
+
+
+# Forecasting horizons
+horizon = [6, 12, 24]
+
+
+
+[arima]
+# grid search parameters: (p,q,d)
+p = [24, 27, 29]
+q = [1, 2]
+d = [1, 2]
+
+best_params = [24, 1, 1]
+
+
+
+[svr]
+# grid search parameters: (kernel, C, degree, coef0, gamma)
+kernel = ['poly', 'rbf']
+c = [10, 100, 1000]
+degree = [3, 9, 12]
+gamma = [0.01, 0.001, 0.0001]
+
+# for PV
+#best_params = {"C"= 100, "degree"= 3, "gamma"= 0.001, "kernel"= "rbf"}
+
+# for CV
+best_params = {"C"= 10, "degree"= 3, "gamma"= 0.01, "kernel"= "poly"}
+
+
+
+[lstm]
+
+# grid search parameters: (dropout, hidden_layers, activation)
+epochs = [100]
+batch_size = [168, 720, 1440]  # 7*24, 30*24, 60*24
+hidden_unit = [128, 256, 512]
+activation = ["tanh", "relu"]
+dropout = [0, 0.2]
+
+
+best_params = {"activation" = "tanh", "dropout"= 0, "hidden_unit"= 512, "epochs"=100, "batch_size"=1440}
+

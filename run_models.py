@@ -1,3 +1,7 @@
+#####
+#   Script for train the models
+#
+
 from datetime import datetime
 from pathlib2 import Path
 from svr_model import SVRModel
@@ -32,24 +36,16 @@ if __name__ == '__main__':
         config = tomli.load(fp)
     horizon = config["horizon"]
 
-   # for i in range(1, 5):
- #   for h in horizon:
-    h = 6
-    i=1
-    svr = SVRModel(config, horizon=h, file_path=[date, i], grid_search=False)
-    save_results(date, config, svr, "SVR", h, i)
-     #   lstm = LSTMModel(config, horizon=h, file_path=[date, i], grid_search=False, architecture=1)
-     #   save_results(date, config, lstm, "LSTM1", h, i)
-     #   lstm = LSTMModel(config, horizon=h, file_path=[date, i], grid_search=False, architecture=2)
-    #    save_results(date, config, lstm, "LSTM2", h, i)
-    #    arima = ArimaModel(config, horizon=h, grid_search=False)
-     #   save_results(date, config, arima, "ARIMA", h, "")
+    # for i in range(1, 5):
+    for h in horizon:
+        i = 1
+        svr = SVRModel(config, horizon=h, file_path=[date, i], grid_search=False)
+        save_results(date, config, svr, "SVR", h, i)
+        lstm = LSTMModel(config, horizon=h, file_path=[date, i], grid_search=False, architecture=1)
+        save_results(date, config, lstm, "LSTM1", h, i)
+        lstm = LSTMModel(config, horizon=h, file_path=[date, i], grid_search=False, architecture=2)
+        save_results(date, config, lstm, "LSTM2", h, i)
+        arima = ArimaModel(config, horizon=h, grid_search=False)
+        save_results(date, config, arima, "ARIMA", h, "")
 
 print("End.")
-
-# %%
-#  lstm = LSTMModel(attribute, test_from_date, test_to_date, horizon)
-#   printer.print_single_forecast(lstm.preparator.y_train, lstm.preparator.y_test, lstm.pred)
-#  printer.print_double_forecast(lstm.preparator.y_train, lstm.preparator.y_test, lstm.prediction, svr.prediction)
-
-# printer.print_multi_forecast(svr.y_train, svr.y_test, arima.prediction, arima2.prediction, arima3.prediction)

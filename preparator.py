@@ -1,3 +1,7 @@
+#####
+#   Class for preparing the data to be used by models
+#
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -11,12 +15,16 @@ class Preparator:
         self.scaler_y = 0
         self.historical_df = self.load_historical_data(attribute)
         self.weather_df = self.load_weather_data(attribute)
-        self.x_train, self.x_test = self.train_test_split_by_date(self.weather_df, test_from_date=test_from_date, train_from_date=train_from_date)
-        self.y_train, self.y_test = self.train_test_split_by_date(self.historical_df, test_from_date=test_from_date, train_from_date=train_from_date)
+        self.x_train, self.x_test = self.train_test_split_by_date(self.weather_df, test_from_date=test_from_date,
+                                                                  train_from_date=train_from_date)
+        self.y_train, self.y_test = self.train_test_split_by_date(self.historical_df, test_from_date=test_from_date,
+                                                                  train_from_date=train_from_date)
 
     def get_scaled_data(self, test_from_date, train_from_date="2020-01-01 00:00"):
-        x_train, x_test = self.train_test_split_by_date(self.weather_df, test_from_date=test_from_date, train_from_date=train_from_date)
-        y_train, y_test = self.train_test_split_by_date(self.historical_df, test_from_date=test_from_date, train_from_date=train_from_date)
+        x_train, x_test = self.train_test_split_by_date(self.weather_df, test_from_date=test_from_date,
+                                                        train_from_date=train_from_date)
+        y_train, y_test = self.train_test_split_by_date(self.historical_df, test_from_date=test_from_date,
+                                                        train_from_date=train_from_date)
         y_train = np.asarray(y_train).reshape(-1, 1)
         y_test = np.asarray(y_test).reshape(-1, 1)
         self.scaler_x, x_train, x_test = self.scaler(x_train, x_test)
@@ -32,11 +40,10 @@ class Preparator:
         master_df.index = pd.DatetimeIndex(master_df.index)
         return master_df[from_date:to_date].loc[:, attribute]
 
-
     def load_weather_data(self, attribute, from_date="2020-01-01 00:00", to_date="2022-02-28 23:00"):
-        radiation_data = pd.read_csv("56.21830411660761_10.146653736350844_Solcast_PT60M.csv",
+        radiation_data = pd.read_csv("extracted-data/56.21830411660761_10.146653736350844_Solcast_PT60M.csv",
                                      parse_dates=["PeriodEnd"], index_col="PeriodEnd")
-        weather_data = pd.read_csv("historical-weather.csv", parse_dates=["dt_iso"], index_col="dt_iso")
+        weather_data = pd.read_csv("extracted-data/historical-weather.csv", parse_dates=["dt_iso"], index_col="dt_iso")
         radiation_data.index = pd.DatetimeIndex(radiation_data.index)
         radiation_data = radiation_data[from_date:to_date]
 
@@ -46,9 +53,9 @@ class Preparator:
         weather_df = weather_df.assign(irrad=radiation_data["Ghi"])
         weather_df = weather_df.assign(hour=weather_df.index.hour)
         # one-hot encoded hours
-     #   hours = pd.get_dummies(weather_df.index.hour, prefix="hour")
-     #   hours.index = weather_df.index
-     #   weather_df = pd.concat([weather_df, hours], axis=1)
+        #   hours = pd.get_dummies(weather_df.index.hour, prefix="hour")
+        #   hours.index = weather_df.index
+        #   weather_df = pd.concat([weather_df, hours], axis=1)
 
         season = (weather_df.index.month % 12 + 3) // 3
         season = pd.get_dummies(season, prefix="season")
@@ -67,7 +74,6 @@ class Preparator:
     def one_hot_encoder(array):
         encoder = OneHotEncoder()
         return encoder.fit_transform(array)
-
 
     @staticmethod
     def scaler(train, test):

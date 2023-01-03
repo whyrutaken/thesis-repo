@@ -1,3 +1,7 @@
+#####
+#   Script for plotting and comparing the baseline models
+#
+
 from printer import *
 from preparator import Preparator
 from persistence_model import PersistenceModel

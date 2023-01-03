@@ -1,3 +1,7 @@
+#####
+#   Script for conducting model tuning
+#
+
 import tomli
 import tomli_w
 from pathlib2 import Path
@@ -28,19 +32,13 @@ if __name__ == '__main__':
         config = tomli.load(fp)
     horizon = config["horizon"]
 
-    #   svr_gs = SVRModel(horizon=horizon[-1], grid_search=True)
-    #   save_results(date, horizon[-1], "SVR", svr_gs.best_params, svr_gs.cv_results, svr_gs.param_grid, svr_gs.best_score, config)
 
-   # lstm_gs = LSTMModel(config, horizon=horizon[-1], file_path=[""], grid_search=True)
-   # save_results(date, horizon[-1], "LSTM", lstm_gs.best_params, lstm_gs.cv_results,lstm_gs.param_grid, lstm_gs.best_score, config)
-
-   # for h in horizon:
-    h=6
-   #     lstm_gs = LSTMModel(config, horizon=h, file_path=[""], grid_search=True)
-    #    save_results(date, h, "LSTM", lstm_gs.best_params, lstm_gs.cv_results, lstm_gs.param_grid, lstm_gs.best_score, config)
-   #     arima_gs = ArimaModel(config, horizon=h, grid_search=True)
-   #     save_results(date, h, "ARIMA", arima_gs.best_params, "", config)
-  #  svr_gs = SVRModel(config, horizon=h, file_path=[""], grid_search=True)
-  #  save_results(date, h, "SVR", svr_gs.best_params, svr_gs.cv_results, svr_gs.param_grid, svr_gs.best_score, config)
+    for h in horizon:
+        lstm_gs = LSTMModel(config, horizon=h, file_path=[""], grid_search=True, architecture=1)
+        save_results(date, h, "LSTM", lstm_gs.best_params, lstm_gs.cv_results, lstm_gs.param_grid, lstm_gs.best_score, config)
+        arima_gs = ArimaModel(config, horizon=h, grid_search=True)
+        save_results(date, h, "ARIMA", arima_gs.best_params, "", config)
+        svr_gs = SVRModel(config, horizon=h, file_path=[""], grid_search=True)
+        save_results(date, h, "SVR", svr_gs.best_params, svr_gs.cv_results, svr_gs.param_grid, svr_gs.best_score, config)
 
     print("End.")
