@@ -15,7 +15,7 @@ Summary of files:
   \ error_metric_calculator.py
       Class for error metric calculation
   \ config.toml
-      TOML config file for model tuning and training
+      TOML config file containing the hyperparameters for model tuning and training
   
   Model classes:
   \ persistence_model.py
