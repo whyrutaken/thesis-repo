@@ -24,23 +24,23 @@ adf_load = adfuller(load_df)
 
 
 #%%
-df = solar_df
+df = load_df
 fig, axes = plt.subplots(3, 2, figsize=(10, 10))
 axes[0, 0].plot(df); axes[0, 0].set_title('Original Series')
-plot_acf(df, ax=axes[0, 1])
+plot_acf(df, ax=axes[0, 1], lags=96)
 
 
 first = df.diff()
 # 1st Differencing
 axes[1, 0].plot(first); axes[1, 0].set_title('1st Order Differencing')
-plot_acf(first.dropna(), ax=axes[1, 1])
+plot_acf(first.dropna(), ax=axes[1, 1], lags=96)
 adf_first = adfuller(first.dropna())
 
 
 second = first.diff()
 # 2nd Differencing
 axes[2, 0].plot(second); axes[2, 0].set_title('2nd Order Differencing')
-plot_acf(second.dropna(), ax=axes[2, 1])
+plot_acf(second.dropna(), ax=axes[2, 1], lags=96)
 plt.show()
 adf_second = adfuller(second.dropna())
 
@@ -68,17 +68,30 @@ print(ndiffs(y, test='kpss'))  # 0
 print(ndiffs(y, test='pp'))  # 2
 #%%
 
-plt.rcParams.update({'figure.figsize':(9,3), 'figure.dpi':120})
+plt.rcParams.update({'figure.figsize':(12,3), 'figure.dpi':120})
 
-df = solar_df
+df = load_df
 df = df.diff().dropna()
 
 fig, axes = plt.subplots(1, 2)
 axes[0].plot(df); axes[0].set_title('1st Differencing')
 axes[1].set(ylim=(0,1))
-plot_pacf(df, ax=axes[1], lags=40)
+axes[1].grid(True, which='both')
+plot_acf(df, ax=axes[1], lags=50)
 
 plt.show()
+
+#%%
+df = solar_df
+fig, ax = plt.subplots(figsize=(12,4))
+plot_pacf(df, lags=192, ax=ax)
+ax.set_title("Partial Autocorrelation Function: PV power production")
+ax.set_ylabel("Correlation coefficient")
+ax.set_xlabel("Lags")
+ax.grid(True, which='both')
+plt.show()
+
+
 
 #%%
 train = solar_df[:2190]

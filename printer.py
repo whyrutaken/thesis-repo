@@ -91,13 +91,15 @@ def print_multi_forecast(train, test, predictions, colors, model_labels, y_label
     fig, ax = plt.subplots(figsize=(15, 5), dpi=100)
     plt.locator_params(axis='x', nbins=5)
     #ax.plot(train[len(train) - 24:], label='training', color="rosybrown")
-    ax.plot(test[48:72], label='training', color="rosybrown")
-    ax.plot(test[72:240], label='actual', color="tomato", linestyle="--")
+    ax.plot(test[48:72], label='training', color="rosybrown") # 48:72
+    ax.plot(test[72:120], label='actual', color="tomato", linestyle="--")  #72:240
     for pred, mlabel, c in zip(predictions, model_labels, colors):
-        ax.plot(pred[72:240], label=mlabel, color=c, alpha=0.7)
+        ax.plot(pred[72:120], label=mlabel, color=c, alpha=0.7)  #72:240
     ax.legend()
     ax.set(xlabel="Time", ylabel=y_label + " [Wh]", title="Forecast vs Actual")
     ax.grid(True, which='both')
+    ax.set_ylim(top=20000)
+    ax.set_ylim(bottom=-500)
     plt.show()
 
 
@@ -164,8 +166,8 @@ def plot_best_scores(scores, std_error, x_labels, ft_type, color):
     ax.set_xlabel("Model type")
     ax.legend()
     ax.grid(True, which='both')
- #   ax.set_ylim(top=0.55)
- #   ax.set_ylim(bottom=-0.1)
+   # ax.set_ylim(top=20000)
+  #  ax.set_ylim(bottom=-500)
     #  plt.tight_layout()
     plt.show()
 
@@ -192,7 +194,7 @@ def plot_best_r2scores_together(scores, x_labels, ft_type, colors, labels):
 
     for score, color, label in zip(scores, colors, labels):
         ax.errorbar(x=x_labels, y=score,  color=color, fmt='--o', label=label, capsize=10, alpha=0.7)
-    ax.set_ylabel("Mean R2", labelpad=4)
+    ax.set_ylabel("R2", labelpad=4)
     ax.set_xlabel("Month")
     ax.legend()
     ax.grid(True, which='both')
