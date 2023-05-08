@@ -1,9 +1,11 @@
 # Repository of the AU Master's Thesis: Building Energy Production and Consumption Forecasting
 
-Summary of files:
+The thesis can be found [here](https://drive.google.com/file/d/1iaO524YydJC296wBv0hvrqVPuxlSZSGA/view?usp=share_link).
+
+Description of files:
 ```
   \ preprocessor.py
-      Class for preprocessing the intial data
+      Class for preprocessing the initial data
   \ statistics.py
       Class for calculating the statistics presented in Section 4.3.2: Descriptive Statistics
   \ exploratory_visualization.py
